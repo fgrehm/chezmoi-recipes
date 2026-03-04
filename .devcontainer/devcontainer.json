@@ -1,0 +1,31 @@
+{
+  "name": "chezmoi-recipes-dev",
+  "image": "mcr.microsoft.com/devcontainers/base:debian-13",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/mise:1": {}
+  },
+  "remoteUser": "vscode",
+  "workspaceFolder": "/workspace",
+  "remoteEnv": {
+    "PATH": "/home/vscode/.local/bin:${PATH}",
+    "XDG_CONFIG_HOME": "/tmp/xdg-config",
+    "XDG_DATA_HOME": "/tmp/xdg-data"
+  },
+  "postCreateCommand": "bash /workspace/.devcontainer/init.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "golangci-lint.golangci-lint-vs-code"
+      ],
+      "settings": {
+        "go.lintOnSave": "package",
+        "go.lintTool": "golangci-lint",
+        "[go]": {
+          "editor.formatOnSave": true,
+          "editor.defaultFormatter": "golang.go"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+*~
+.*.swo
+.*.swp
+.DS_Store
+.bundle/
+.claude/clotilde
+.claude/output-styles/clotilde/
+.svn
+.vagrant/
+.worktrees/
+dooing.json
+vendor/bundle
