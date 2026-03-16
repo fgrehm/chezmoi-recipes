@@ -119,14 +119,19 @@ See `docs/chezmoi-integration.md` for the full integration design.
 
 **Linux only** (macOS and Windows support planned).
 
-**Download binary** (recommended):
+**Install script** (recommended): installs chezmoi and chezmoi-recipes, then optionally clones and applies a dotfiles repo.
 
 ```bash
-# Linux (amd64)
-curl -fsSL https://github.com/fgrehm/chezmoi-recipes/releases/latest/download/chezmoi-recipes_linux_amd64.tar.gz | tar xz -C ~/.local/bin
+# Install binaries only
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)"
 
-# Linux (arm64)
-curl -fsSL https://github.com/fgrehm/chezmoi-recipes/releases/latest/download/chezmoi-recipes_linux_arm64.tar.gz | tar xz -C ~/.local/bin
+# Install and apply from GitHub (assumes repo named "dotfiles")
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- username
+
+# Install and apply from an explicit repo
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- username/repo
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- https://github.com/username/repo
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- git@github.com:username/repo
 ```
 
 **Go install:**
@@ -157,16 +162,13 @@ make install  # Installs to ~/.local/bin
 
 3. Run `chezmoi init` to process the config template (prompts for name, email, auto-detects environment):
    ```bash
-   chezmoi init
+   chezmoi init --source ~/.local/share/chezmoi-recipes/source
    ```
 
 4. Scaffold a new recipe or copy an example:
    ```bash
    # Generate a starter recipe with annotated example files
    chezmoi-recipes scaffold git
-
-   # Or copy a reference implementation from the examples directory
-   cp -r /path/to/chezmoi-recipes/examples/git recipes/git
    ```
 
 5. Apply it:

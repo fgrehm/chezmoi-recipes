@@ -48,6 +48,10 @@ Some files don't belong to any single tool. These need special handling (see Ste
 ```bash
 # Initialize: creates recipes/ dir, chezmoi source dir, .chezmoi.toml.tmpl, shared scripts
 chezmoi-recipes init --recipes-dir ./recipes
+
+# Re-configure chezmoi to use the chezmoi-recipes source directory
+# (prompts for name and email if not already in the config)
+chezmoi init --source ~/.local/share/chezmoi-recipes/source
 ```
 
 Create a `.recipeignore` in your recipes directory for environment filtering. This replaces the per-file entries you had in `.chezmoiignore`:

@@ -112,4 +112,4 @@ For filtering entire recipes by environment (instead of individual files), use `
 ## Open questions
 
 - **`.chezmoitemplates/` aggregation.** Template partials placed in recipe `chezmoi/.chezmoitemplates/` directories are handled naturally by overlay (each file gets a unique name, no merge needed). No special handling required.
-- **Bootstrap on fresh systems.** On a fresh machine, chezmoi may not be installed yet. chezmoi-recipes needs a bootstrap path.
+- **Bootstrap on fresh systems.** An `install.sh` at the repo root is the recommended pattern: install chezmoi and chezmoi-recipes to `~/.local/bin`, run `chezmoi-recipes init --recipes-dir <repo>/recipes`, then `chezmoi init --source ~/.local/share/chezmoi-recipes/source` to prompt for user data, then `chezmoi apply`. See [fgrehm/home](https://github.com/fgrehm/home) for a reference implementation.
