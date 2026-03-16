@@ -112,7 +112,35 @@ See `docs/chezmoi-integration.md` for the full integration design.
 | Language   | Go                |
 | Foundation | chezmoi           |
 | Target OS  | Debian 13 (Trixie)|
+| Platform   | Linux (macOS and Windows support planned) |
 | License    | MIT               |
+
+## Installation
+
+**Linux only** (macOS and Windows support planned).
+
+**Download binary** (recommended):
+
+```bash
+# Linux (amd64)
+curl -fsSL https://github.com/fgrehm/chezmoi-recipes/releases/latest/download/chezmoi-recipes_linux_amd64.tar.gz | tar xz -C ~/.local/bin
+
+# Linux (arm64)
+curl -fsSL https://github.com/fgrehm/chezmoi-recipes/releases/latest/download/chezmoi-recipes_linux_arm64.tar.gz | tar xz -C ~/.local/bin
+```
+
+**Go install:**
+```bash
+go install github.com/fgrehm/chezmoi-recipes@latest
+```
+
+**Build from source:**
+```bash
+git clone https://github.com/fgrehm/chezmoi-recipes
+cd chezmoi-recipes
+make build
+make install  # Installs to ~/.local/bin
+```
 
 ## Getting started
 
