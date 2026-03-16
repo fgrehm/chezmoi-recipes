@@ -35,9 +35,12 @@ func TestWriteChezmoiConfig(t *testing.T) {
 		t.Error("missing or incorrect sourceDir setting")
 	}
 
-	// Hook config is present with correct recipes dir.
+	// Both hook sections are present with correct recipes dir.
+	if !strings.Contains(content, `[hooks.apply.pre]`) {
+		t.Error("missing [hooks.apply.pre] section")
+	}
 	if !strings.Contains(content, `[hooks.read-source-state.pre]`) {
-		t.Error("missing hook config section")
+		t.Error("missing [hooks.read-source-state.pre] section")
 	}
 	if !strings.Contains(content, recipesDir) {
 		t.Errorf("missing recipes dir %q in template", recipesDir)

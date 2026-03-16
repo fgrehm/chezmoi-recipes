@@ -55,6 +55,10 @@ const chezmoiConfigTemplate = `{{- /* Auto-detect environment */ -}}
 
 sourceDir = %[1]q
 
+[hooks.apply.pre]
+    command = "chezmoi-recipes"
+    args = ["pull", "--on-error", "warn", "--recipes-dir", %[2]q]
+
 [hooks.read-source-state.pre]
     command = "chezmoi-recipes"
     args = ["overlay", "--quiet", "--recipes-dir", %[2]q]
