@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Install chezmoi and chezmoi-recipes, clone a dotfiles repo, and apply it.
 #
 # Usage:
@@ -17,7 +17,7 @@
 #   --dotfiles-dir DIR   Where to clone the repo (default: ~/dotfiles)
 #   --bin-dir DIR        Where to install binaries (default: ~/.local/bin)
 
-set -euo pipefail
+set -eu
 
 BIN_DIR="${BIN_DIR:-$HOME/.local/bin}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
@@ -26,7 +26,7 @@ REPO=""
 _log() { printf '\033[1;34m==> %s\033[0m\n' "$*"; }
 _die() { printf '\033[1;31merror: %s\033[0m\n' "$*" >&2; exit 1; }
 
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
   case "$1" in
     --bin-dir)      BIN_DIR="$2";      shift 2 ;;
     --dotfiles-dir) DOTFILES_DIR="$2"; shift 2 ;;
@@ -65,7 +65,7 @@ else
 fi
 
 # No repo given: binaries only
-if [[ -z "$REPO" ]]; then
+if [ -z "$REPO" ]; then
   printf '\nchezmoi and chezmoi-recipes installed to %s\n' "$BIN_DIR"
   printf 'Next: chezmoi-recipes init --recipes-dir <path/to/recipes>\n'
   exit 0
@@ -79,7 +79,7 @@ case "$REPO" in
 esac
 
 # Clone dotfiles repo (skip if already present)
-if [[ -d "$DOTFILES_DIR/.git" ]]; then
+if [ -d "$DOTFILES_DIR/.git" ]; then
   _log "Using existing dotfiles at $DOTFILES_DIR"
 else
   _log "Cloning $REPO_URL"
