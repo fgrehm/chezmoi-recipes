@@ -363,14 +363,14 @@ To skip an entire recipe by environment, use `.recipeignore` instead.
 
 ## Common pitfalls
 
-### `chezmoi cd` lands in the overlay output, not your recipes repo
+### `chezmoi cd` goes to the repo root, not `recipes/`
 
-`chezmoi cd` opens a shell in `~/.local/share/chezmoi-recipes/source/` (the
-overlay output directory), not in your recipes repository. Edits there are
-overwritten on the next `chezmoi apply`.
+`chezmoi cd` opens a shell in the working tree root (your dotfiles repo), not in `recipes/`. This is correct behavior: the working tree is the repo, not `compiled-home/`. Navigate from there:
 
-Always edit files under your `recipes/` directory. Use the path from
-`chezmoi-recipes status` or open the file directly in your editor.
+```bash
+chezmoi cd          # lands in ~/dotfiles/
+cd recipes/neovim   # then navigate to the recipe you want
+```
 
 ### `.chezmoidata/` directories are global
 
@@ -417,6 +417,42 @@ When ignoring a script file, use the bare script name without `run_once_`,
 - **Install + config + shell integration** (git, mise): the typical recipe
 - **Multiple related tools** (ripgrep + fzf + jq grouped as "dev-tools"): acceptable when always installed together
 - **System-level config** (KDE plasma + panel + cedilla + inotify): group by platform concern
+
+### Symlink pattern for large or frequently-edited configs
+
+For tools with large config directories (like Neovim), consider keeping the config at the repo root and pointing `~/` at it via chezmoi's native [`symlink_` source attribute](https://www.chezmoi.io/reference/source-state-attributes/). This lets you edit config files and have changes take effect immediately, without `chezmoi apply`.
+
+**Layout:**
+
+```
+recipes/neovim/
+  README.md
+  chezmoi/                   <- overlay input (scripts, small configs)
+    .chezmoiscripts/
+      ...
+  config/
+    nvim/                    <- the actual config, tracked in git
+      init.lua
+      lua/
+        ...
+home/
+  private_dot_config/
+    symlink_nvim.tmpl        <- chezmoi symlink descriptor
+```
+
+The `config/` subdirectory sits alongside `chezmoi/` inside the recipe. It is not overlay input - the overlay only reads `chezmoi/`. It's just tracked files that `~/` points at directly.
+
+**`home/private_dot_config/symlink_nvim.tmpl`:**
+
+```
+{{ .chezmoi.workingTree }}/recipes/neovim/config/nvim
+```
+
+chezmoi reads this file, sees the `symlink_` prefix, and creates `~/.config/nvim` as a symlink pointing at `<repo-root>/recipes/neovim/config/nvim`. The template expands `.chezmoi.workingTree` to the dotfiles repo root, so it works on any machine regardless of where the repo is cloned.
+
+After the initial `chezmoi apply`, edits to `config/nvim/` take effect immediately. No re-apply needed.
+
+This pattern works well when the config is large, changes frequently, or you want to edit it directly without chezmoi's naming conventions (`private_dot_config/`, `.tmpl`, etc.) on every file. Keeping `config/` inside the recipe means everything for that tool lives in one place, and removing the recipe removes the config too.
 
 ## Template variables reference
 

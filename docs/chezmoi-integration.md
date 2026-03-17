@@ -26,11 +26,19 @@ chezmoi-recipes uses chezmoi's [`.chezmoiroot`](https://www.chezmoi.io/reference
 
 `home/` contains chezmoi source files that don't belong to any recipe (config template, shell configs, etc.). `recipes/` contains recipe directories. `compiled-home/` is the merge of both, rebuilt on every overlay run.
 
-## Integration hook
+## Integration hooks
 
-chezmoi-recipes integrates via one [chezmoi hook](https://www.chezmoi.io/reference/configuration-file/hooks/):
+chezmoi-recipes uses two kinds of [chezmoi hooks](https://www.chezmoi.io/reference/configuration-file/hooks/): one functional hook and a set of guard hooks.
+
+**Functional hook:**
 
 - **`read-source-state.pre`** runs `chezmoi-recipes overlay`, which clears `compiled-home/`, copies `home/` files, then overlays each recipe's `chezmoi/` directory. This fires for any chezmoi command that reads source state (`apply`, `diff`, `status`, `data`, etc.), so `compiled-home/` is always up to date.
+
+**Guard hooks** block commands that would write to `compiled-home/` (where changes would be silently lost on the next overlay):
+
+- `add.pre`, `edit.pre`, `re-add.pre`, `merge.pre`, `chattr.pre`, `import.pre`, `forget.pre`, `destroy.pre`
+
+Each guard hook prints an error message explaining what to do instead (edit in `home/` or `recipes/`) and exits non-zero, preventing chezmoi from proceeding. See [Guard hooks](#guard-hooks) for details.
 
 The user's primary workflow is just `chezmoi apply`. chezmoi-recipes is invisible infrastructure.
 
@@ -162,20 +170,3 @@ Key behaviors:
 - **Idempotent.** Running overlay twice with unchanged recipes produces the same `.chezmoiignore` content.
 
 For filtering entire recipes by environment (instead of individual files), use `.recipeignore`. Per-recipe `.chezmoiignore` is for finer-grained control within a recipe.
-
-## Bootstrap flow
-
-On a fresh system:
-
-```bash
-# 1. Install chezmoi and chezmoi-recipes
-sh -c "$(curl -fsSL .../install.sh)" -- username
-
-# Or manually:
-# git clone <repo> ~/dotfiles
-# chezmoi-recipes init --recipes-dir ~/dotfiles/recipes
-# chezmoi init --source ~/dotfiles
-# chezmoi apply
-```
-
-The install script clones the dotfiles repo, runs `chezmoi-recipes init` (creates `.chezmoiroot`, `home/`, config template, initial overlay), then `chezmoi init --source ~/dotfiles` (processes the config template, prompts for user data), then `chezmoi apply`.

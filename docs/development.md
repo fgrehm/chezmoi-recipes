@@ -51,9 +51,18 @@ The project includes a devcontainer configuration for VS Code or other devcontai
 
 ### Quick start
 
-1. Open the project in VS Code with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
+**VS Code** ([Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension):
+
+1. Open the project in VS Code.
 2. Use the command palette (`Cmd+Shift+P` on macOS, `Ctrl+Shift+P` on Linux/Windows) and run "Dev Containers: Open Folder in Container".
 3. Wait for the container to build and initialize.
+
+**[crib](https://fgrehm.github.io/crib)** (terminal, no IDE required):
+
+```bash
+crib up     # build and start the container
+crib shell  # enter an interactive shell
+```
 
 The devcontainer automatically:
 - Installs Go and golangci-lint via mise

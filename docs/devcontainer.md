@@ -6,10 +6,11 @@ This project includes a devcontainer configuration for consistent development ac
 
 ### Requirements
 
-- VS Code with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
 - Docker (Docker Desktop or a compatible Docker daemon)
 
 ### Opening the project
+
+**With VS Code** ([Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension):
 
 1. Clone the repository:
    ```bash
@@ -23,6 +24,17 @@ This project includes a devcontainer configuration for consistent development ac
    ```
 
 3. VS Code will detect the devcontainer and prompt to reopen in a container. Click "Reopen in Container" or use the command palette (`Cmd+Shift+P`, search "Dev Containers: Open Folder in Container").
+
+**With [crib](https://fgrehm.github.io/crib)** (IDE-free, terminal-only):
+
+```bash
+git clone <repo-url> chezmoi-recipes
+cd chezmoi-recipes
+crib up       # build and start the container
+crib shell    # enter an interactive shell inside it
+```
+
+`crib` runs `devcontainer.json` without VS Code. Install it with `mise use github:fgrehm/crib`.
 
 4. Wait for the container to build and initialize (first run takes a minute or two).
 

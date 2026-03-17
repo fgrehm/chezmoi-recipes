@@ -25,6 +25,17 @@ How to convert an existing chezmoi dotfiles repo into chezmoi-recipes recipes.
 - chezmoi-recipes binary (build from source with `make build` or grab a [release](https://github.com/fgrehm/chezmoi-recipes/releases))
 - Familiarity with [chezmoi source state attributes](https://www.chezmoi.io/reference/source-state-attributes/)
 
+## Step 0: Commit everything to source control
+
+Before making any changes, ensure your dotfiles repo has a clean git state:
+
+```bash
+cd ~/dotfiles
+git add -A && git commit -m "chore: snapshot before chezmoi-recipes migration"
+```
+
+The migration moves files between directories. A clean commit gives you a recovery point if anything goes wrong.
+
 ## Step 1: Inventory your dotfiles
 
 Group your chezmoi source files by tool or concern. For each file, ask: "what tool does this belong to?"
