@@ -40,7 +40,7 @@ or debug overlay behavior.`,
 		if err != nil {
 			return fmt.Errorf("resolving chezmoi config: %w", err)
 		}
-		return runOverlay(cmd.Context(), args, dryRun, quiet, recipesDir(), sourceDir(), stateFile, chezmoiConfig, os.Stdout)
+		return runOverlay(cmd.Context(), args, dryRun, quiet, recipesDir(), stateFile, chezmoiConfig, os.Stdout)
 	},
 }
 
@@ -50,24 +50,54 @@ func init() {
 	rootCmd.AddCommand(overlayCmd)
 }
 
-func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipesDir, srcDir, stateFile, chezmoiConfigFile string, w io.Writer) error {
+func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipesDir, stateFile, chezmoiConfigFile string, w io.Writer) error {
+	absRecipesDir, err := filepath.Abs(recipesDir)
+	if err != nil {
+		return fmt.Errorf("resolving recipes dir: %w", err)
+	}
+	repoRoot := filepath.Dir(absRecipesDir)
+	compiledHome := paths.CompiledHomeDir(repoRoot)
+	homeDir := paths.HomeDir(repoRoot)
+
 	// Resolve recipe list.
-	recipes, allFiltered, err := resolveRecipes(names, recipesDir, chezmoiConfigFile)
+	recipes, allFiltered, err := resolveRecipes(names, absRecipesDir, chezmoiConfigFile)
 	if err != nil {
 		return err
 	}
 
-	// Load state.
+	// Detect home/recipe conflicts before any copying.
+	if err := overlay.DetectHomeRecipeConflicts(homeDir, recipes); err != nil {
+		return err
+	}
+
+	// Clear and rebuild compiled-home/ from scratch.
+	if !dryRun {
+		if err := overlay.ClearDir(compiledHome); err != nil {
+			return fmt.Errorf("clearing compiled-home: %w", err)
+		}
+		if err := os.MkdirAll(compiledHome, 0o755); err != nil {
+			return fmt.Errorf("creating compiled-home: %w", err)
+		}
+
+		// Copy home/ files first.
+		if _, err := overlay.CopyTree(homeDir, compiledHome); err != nil {
+			return fmt.Errorf("copying home: %w", err)
+		}
+
+		// Deploy shared scripts.
+		if err := setup.DeploySharedScripts(compiledHome); err != nil {
+			return fmt.Errorf("deploying shared scripts: %w", err)
+		}
+	}
+
+	// Load state (used for recipe-vs-recipe conflict detection and status tracking).
 	store, err := state.Load(stateFile)
 	if err != nil {
 		return fmt.Errorf("loading state: %w", err)
 	}
 
-	// Snapshot old files for stale detection (only in all-recipes mode).
-	var oldFiles map[string]string
-	if len(names) == 0 {
-		oldFiles = store.AllFiles()
-	}
+	// Start with a fresh store for recipe tracking since compiled-home/ is rebuilt.
+	store.Recipes = make(map[string]*state.RecipeState)
 
 	// Early exit if no recipes to overlay.
 	if len(recipes) == 0 {
@@ -78,33 +108,17 @@ func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipes
 				fmt.Fprintf(w, "No recipes found in %s\n", recipesDir)
 			}
 		}
-		// Still clean stale files when in all-recipes mode.
-		if len(names) == 0 && len(oldFiles) > 0 {
-			if _, err := cleanStaleFiles(oldFiles, store, nil, dryRun, quiet, srcDir, w); err != nil {
-				return err
-			}
-			if !dryRun {
-				if err := store.Save(stateFile); err != nil {
-					return fmt.Errorf("saving state: %w", err)
-				}
+		if !dryRun {
+			if err := store.Save(stateFile); err != nil {
+				return fmt.Errorf("saving state: %w", err)
 			}
 		}
 		return nil
 	}
 
-	// Create source dir and deploy shared scripts (once, before loop).
-	if !dryRun {
-		if err := os.MkdirAll(srcDir, 0o755); err != nil {
-			return fmt.Errorf("creating source directory: %w", err)
-		}
-		if err := setup.DeploySharedScripts(srcDir); err != nil {
-			return fmt.Errorf("deploying shared scripts: %w", err)
-		}
-	}
-
 	total := len(recipes)
 	multi := total > 1
-	var totalAdded, totalUpdated int
+	var totalAdded int
 
 	if !quiet && multi {
 		if dryRun {
@@ -124,9 +138,9 @@ func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipes
 
 		var result *overlay.Result
 		if dryRun {
-			result, err = overlay.Plan(ctx, r, srcDir, store)
+			result, err = overlay.Plan(ctx, r, compiledHome, store)
 		} else {
-			result, err = overlay.Execute(ctx, r, srcDir, store)
+			result, err = overlay.Execute(ctx, r, compiledHome, store)
 		}
 		if err != nil {
 			return err
@@ -136,7 +150,6 @@ func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipes
 		store.RecordRecipe(r.Name, result.AllFiles())
 
 		totalAdded += len(result.Added)
-		totalUpdated += len(result.Updated)
 
 		if !quiet {
 			printRecipeResult(w, r.Name, result, i+1, total, multi, dryRun)
@@ -157,23 +170,14 @@ func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipes
 		}
 		if dryRun {
 			merged := setup.BuildChezmoiIgnore([]string{"scripts/"}, ignoreEntries)
-			existing, _ := os.ReadFile(filepath.Join(srcDir, ".chezmoiignore"))
+			existing, _ := os.ReadFile(filepath.Join(compiledHome, ".chezmoiignore"))
 			if merged != string(existing) && !quiet {
 				fmt.Fprintln(w, "\n.chezmoiignore would be updated")
 			}
 		} else {
-			if err := setup.MergeChezmoiIgnore(srcDir, []string{"scripts/"}, ignoreEntries); err != nil {
+			if err := setup.MergeChezmoiIgnore(compiledHome, []string{"scripts/"}, ignoreEntries); err != nil {
 				return err
 			}
-		}
-	}
-
-	// Clean stale files (only in all-recipes mode).
-	var totalRemoved int
-	if len(names) == 0 {
-		totalRemoved, err = cleanStaleFiles(oldFiles, store, recipes, dryRun, quiet, srcDir, w)
-		if err != nil {
-			return err
 		}
 	}
 
@@ -186,7 +190,7 @@ func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipes
 
 	// Summary line (not for dry-run, not for quiet).
 	if !quiet && !dryRun {
-		printSummary(w, total, totalAdded, totalUpdated, totalRemoved)
+		printSummary(w, total, totalAdded, 0, 0)
 	}
 
 	return nil
@@ -279,71 +283,6 @@ func printRecipeResult(w io.Writer, name string, result *overlay.Result, index, 
 	}
 }
 
-// cleanStaleFiles finds stale files, deletes them (unless dry-run), removes
-// stale recipe entries from state, and prints output. Does not save state.
-// Returns the number of stale files found.
-func cleanStaleFiles(oldFiles map[string]string, store *state.Store, recipes []*recipe.Recipe, dryRun, quiet bool, srcDir string, w io.Writer) (int, error) {
-	overlaid := recipeNameSet(recipes)
-	staleFiles := findStaleFiles(oldFiles, store, overlaid)
-
-	if !dryRun {
-		for _, f := range staleFiles {
-			if err := removeFileAndCleanDirs(filepath.Join(srcDir, f), srcDir); err != nil {
-				return 0, fmt.Errorf("removing stale file %q: %w", f, err)
-			}
-		}
-		// Remove stale recipe entries from store.
-		for name := range store.Recipes {
-			if !overlaid[name] {
-				delete(store.Recipes, name)
-			}
-		}
-	}
-
-	if !quiet && len(staleFiles) > 0 {
-		if dryRun {
-			fmt.Fprintf(w, "\nWould remove %d stale files:\n", len(staleFiles))
-		} else {
-			fmt.Fprintf(w, "\nRemoved %d stale files:\n", len(staleFiles))
-		}
-		for _, f := range staleFiles {
-			fmt.Fprintf(w, "  - %s\n", f)
-		}
-	}
-
-	return len(staleFiles), nil
-}
-
-// recipeNameSet returns a set of recipe names from the given slice.
-func recipeNameSet(recipes []*recipe.Recipe) map[string]bool {
-	set := make(map[string]bool, len(recipes))
-	for _, r := range recipes {
-		set[r.Name] = true
-	}
-	return set
-}
-
-// findStaleFiles returns files that were in oldFiles but are no longer owned
-// by any of the overlaid recipes in the current store.
-func findStaleFiles(oldFiles map[string]string, store *state.Store, overlaid map[string]bool) []string {
-	newFiles := make(map[string]bool)
-	for name, rs := range store.Recipes {
-		if overlaid[name] {
-			for _, f := range rs.Files {
-				newFiles[f] = true
-			}
-		}
-	}
-
-	var stale []string
-	for f := range oldFiles {
-		if !newFiles[f] {
-			stale = append(stale, f)
-		}
-	}
-	sort.Strings(stale)
-	return stale
-}
 
 // printSummary prints the final summary line after all overlays.
 func printSummary(w io.Writer, recipeCount, added, updated, removed int) {
