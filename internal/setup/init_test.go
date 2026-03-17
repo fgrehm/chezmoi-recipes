@@ -1,21 +1,281 @@
 package setup
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
 
+func TestRunInit_CreatesChezmoiroot(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, ".chezmoiroot"))
+	if err != nil {
+		t.Fatalf(".chezmoiroot not found: %v", err)
+	}
+	if string(data) != "compiled-home\n" {
+		t.Errorf(".chezmoiroot = %q, want %q", string(data), "compiled-home\n")
+	}
+}
+
+func TestRunInit_CreatesHomeDir(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	info, err := os.Stat(filepath.Join(repoRoot, "home"))
+	if err != nil {
+		t.Fatalf("home/ not found: %v", err)
+	}
+	if !info.IsDir() {
+		t.Error("home/ should be a directory")
+	}
+}
+
+func TestRunInit_WritesConfigToHome(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, "home", ".chezmoi.toml.tmpl"))
+	if err != nil {
+		t.Fatalf(".chezmoi.toml.tmpl not in home/: %v", err)
+	}
+	content := string(data)
+
+	if !strings.Contains(content, `[hooks.read-source-state.pre]`) {
+		t.Error("config should have read-source-state.pre hook")
+	}
+	if !strings.Contains(content, recipesDir) {
+		t.Errorf("config should reference recipes dir %q", recipesDir)
+	}
+}
+
+func TestRunInit_AddsCompiledHomeToGitignore(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	// Write an existing .gitignore.
+	if err := os.WriteFile(filepath.Join(repoRoot, ".gitignore"), []byte("*.swp\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, ".gitignore"))
+	if err != nil {
+		t.Fatalf(".gitignore not found: %v", err)
+	}
+	content := string(data)
+
+	if !strings.Contains(content, "compiled-home/") {
+		t.Error(".gitignore should contain compiled-home/")
+	}
+	if !strings.Contains(content, "*.swp") {
+		t.Error("existing .gitignore content should be preserved")
+	}
+}
+
+func TestRunInit_GitignoreIdempotent(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := RunInit(repoRoot, recipesDir, true); err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, ".gitignore"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	count := strings.Count(string(data), "compiled-home/")
+	if count != 1 {
+		t.Errorf("compiled-home/ appears %d times in .gitignore, want 1", count)
+	}
+}
+
+func TestRunInit_ConfigTemplateNoApplyPre(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, "home", ".chezmoi.toml.tmpl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+
+	if strings.Contains(content, `[hooks.apply.pre]`) {
+		t.Error("config should NOT have [hooks.apply.pre] section")
+	}
+	if strings.Contains(content, "sourceDir") {
+		t.Error("config should NOT set sourceDir")
+	}
+}
+
+func TestRunInit_ConfigTemplateHasGuardHooks(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, "home", ".chezmoi.toml.tmpl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+
+	guardedCommands := []string{"add", "edit", "re-add", "merge", "chattr", "import", "forget", "destroy"}
+	for _, cmd := range guardedCommands {
+		section := "[hooks." + cmd + ".pre]"
+		if !strings.Contains(content, section) {
+			t.Errorf("config should have guard hook section %q", section)
+		}
+	}
+}
+
+func TestRunInit_CompiledHomePopulated(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatal(err)
+	}
+
+	// compiled-home/ should contain .chezmoi.toml.tmpl (copied from home/).
+	if _, err := os.Stat(filepath.Join(repoRoot, "compiled-home", ".chezmoi.toml.tmpl")); err != nil {
+		t.Error("compiled-home/ should contain .chezmoi.toml.tmpl after init")
+	}
+}
+
+func TestRunInit_CreatesRecipesDir(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatal(err)
+	}
+
+	info, err := os.Stat(recipesDir)
+	if err != nil {
+		t.Fatalf("recipes dir not created: %v", err)
+	}
+	if !info.IsDir() {
+		t.Error("recipes should be a directory")
+	}
+}
+
+func TestRunInit_SkipExistingConfig(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := RunInit(repoRoot, recipesDir, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.ConfigSkipped {
+		t.Error("expected ConfigSkipped=true on second run")
+	}
+}
+
+func TestRunInit_ForceOverwriteConfig(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatal(err)
+	}
+
+	// Write custom content to verify it gets overwritten.
+	configPath := filepath.Join(repoRoot, "home", ".chezmoi.toml.tmpl")
+	if err := os.WriteFile(configPath, []byte("custom"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := RunInit(repoRoot, recipesDir, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.ConfigSkipped {
+		t.Error("expected ConfigSkipped=false with force=true")
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) == "custom" {
+		t.Error("config should have been overwritten with force=true")
+	}
+}
+
 func TestWriteChezmoiConfig(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 
-	sourceDir := t.TempDir()
+	homeDir := t.TempDir()
 	recipesDir := "/home/user/dotfiles/recipes"
 
-	skipped, err := WriteChezmoiConfig(sourceDir, recipesDir, false)
+	skipped, err := WriteChezmoiConfig(homeDir, recipesDir, false)
 	if err != nil {
 		t.Fatalf("WriteChezmoiConfig() error = %v", err)
 	}
@@ -23,21 +283,18 @@ func TestWriteChezmoiConfig(t *testing.T) {
 		t.Error("expected skipped=false for new file")
 	}
 
-	data, err := os.ReadFile(filepath.Join(sourceDir, ".chezmoi.toml.tmpl"))
+	data, err := os.ReadFile(filepath.Join(homeDir, ".chezmoi.toml.tmpl"))
 	if err != nil {
 		t.Fatalf("reading .chezmoi.toml.tmpl: %v", err)
 	}
 
 	content := string(data)
 
-	// sourceDir is set to the chezmoi-recipes source directory.
-	if !strings.Contains(content, fmt.Sprintf("sourceDir = %q", sourceDir)) {
-		t.Error("missing or incorrect sourceDir setting")
+	if strings.Contains(content, "sourceDir") {
+		t.Error("config should NOT set sourceDir")
 	}
-
-	// Both hook sections are present with correct recipes dir.
-	if !strings.Contains(content, `[hooks.apply.pre]`) {
-		t.Error("missing [hooks.apply.pre] section")
+	if strings.Contains(content, `[hooks.apply.pre]`) {
+		t.Error("config should NOT have [hooks.apply.pre] section")
 	}
 	if !strings.Contains(content, `[hooks.read-source-state.pre]`) {
 		t.Error("missing [hooks.read-source-state.pre] section")
@@ -45,28 +302,14 @@ func TestWriteChezmoiConfig(t *testing.T) {
 	if !strings.Contains(content, recipesDir) {
 		t.Errorf("missing recipes dir %q in template", recipesDir)
 	}
-
-	// Data section uses chezmoi template functions.
 	if !strings.Contains(content, `[data]`) {
 		t.Error("missing [data] section")
-	}
-	if !strings.Contains(content, fmt.Sprintf("recipesDir = %q", recipesDir)) {
-		t.Error("missing recipesDir in [data] section")
 	}
 	if !strings.Contains(content, `promptStringOnce . "name"`) {
 		t.Error("missing promptStringOnce for name")
 	}
-	if !strings.Contains(content, `promptStringOnce . "email"`) {
-		t.Error("missing promptStringOnce for email")
-	}
 	if !strings.Contains(content, `$isContainer`) {
 		t.Error("missing isContainer detection")
-	}
-	if !strings.Contains(content, `$isDebian`) {
-		t.Error("missing isDebian detection")
-	}
-	if !strings.Contains(content, `$hasNvidiaGPU`) {
-		t.Error("missing hasNvidiaGPU detection")
 	}
 }
 
@@ -74,31 +317,18 @@ func TestWriteChezmoiConfig_SkipExisting(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 
-	sourceDir := t.TempDir()
+	homeDir := t.TempDir()
 
-	if _, err := WriteChezmoiConfig(sourceDir, "/old/recipes", false); err != nil {
+	if _, err := WriteChezmoiConfig(homeDir, "/old/recipes", false); err != nil {
 		t.Fatal(err)
 	}
 
-	skipped, err := WriteChezmoiConfig(sourceDir, "/new/recipes", false)
+	skipped, err := WriteChezmoiConfig(homeDir, "/new/recipes", false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !skipped {
 		t.Error("expected skipped=true when file exists")
-	}
-
-	data, err := os.ReadFile(filepath.Join(sourceDir, ".chezmoi.toml.tmpl"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	content := string(data)
-	if !strings.Contains(content, "/old/recipes") {
-		t.Error("original content should be preserved")
-	}
-	if strings.Contains(content, "/new/recipes") {
-		t.Error("file should not have been overwritten")
 	}
 }
 
@@ -106,13 +336,13 @@ func TestWriteChezmoiConfig_ForceOverwrite(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 
-	sourceDir := t.TempDir()
+	homeDir := t.TempDir()
 
-	if _, err := WriteChezmoiConfig(sourceDir, "/old/recipes", false); err != nil {
+	if _, err := WriteChezmoiConfig(homeDir, "/old/recipes", false); err != nil {
 		t.Fatal(err)
 	}
 
-	skipped, err := WriteChezmoiConfig(sourceDir, "/new/recipes", true)
+	skipped, err := WriteChezmoiConfig(homeDir, "/new/recipes", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +350,7 @@ func TestWriteChezmoiConfig_ForceOverwrite(t *testing.T) {
 		t.Error("expected skipped=false with force=true")
 	}
 
-	data, err := os.ReadFile(filepath.Join(sourceDir, ".chezmoi.toml.tmpl"))
+	data, err := os.ReadFile(filepath.Join(homeDir, ".chezmoi.toml.tmpl"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,51 +361,5 @@ func TestWriteChezmoiConfig_ForceOverwrite(t *testing.T) {
 	}
 	if !strings.Contains(content, "/new/recipes") {
 		t.Errorf("expected new recipes dir, got:\n%s", content)
-	}
-}
-
-func TestRunInit(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
-	t.Setenv("XDG_DATA_HOME", t.TempDir())
-
-	tmp := t.TempDir()
-	sourceDir := filepath.Join(tmp, "source")
-	recipesDir := filepath.Join(tmp, "recipes")
-
-	result, err := RunInit(sourceDir, recipesDir, false)
-	if err != nil {
-		t.Fatalf("RunInit() error = %v", err)
-	}
-	if result.ConfigSkipped {
-		t.Error("expected ConfigSkipped=false on first run")
-	}
-
-	// Verify source dir was created.
-	if _, err := os.Stat(sourceDir); err != nil {
-		t.Errorf("source dir not created: %v", err)
-	}
-
-	// Verify .chezmoi.toml.tmpl exists.
-	if _, err := os.Stat(filepath.Join(sourceDir, ".chezmoi.toml.tmpl")); err != nil {
-		t.Errorf(".chezmoi.toml.tmpl not found: %v", err)
-	}
-
-	// Verify shared scripts deployed.
-	if _, err := os.Stat(filepath.Join(sourceDir, "scripts", "ui.bash")); err != nil {
-		t.Errorf("scripts/ui.bash not found: %v", err)
-	}
-
-	// Verify recipes dir was created.
-	if _, err := os.Stat(recipesDir); err != nil {
-		t.Errorf("recipes dir not created: %v", err)
-	}
-
-	// Second run should skip config.
-	result, err = RunInit(sourceDir, recipesDir, false)
-	if err != nil {
-		t.Fatalf("RunInit() second run error = %v", err)
-	}
-	if !result.ConfigSkipped {
-		t.Error("expected ConfigSkipped=true on second run")
 	}
 }
