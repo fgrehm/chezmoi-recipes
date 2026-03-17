@@ -86,13 +86,11 @@ else
   git clone "$REPO_URL" "$DOTFILES_DIR"
 fi
 
-SOURCE_DIR="$HOME/.local/share/chezmoi-recipes/source"
-
 _log "Initializing chezmoi-recipes"
 chezmoi-recipes init --recipes-dir "$DOTFILES_DIR/recipes"
 
 _log "Configuring chezmoi"
-chezmoi init --source "$SOURCE_DIR"
+chezmoi init --source "$DOTFILES_DIR"
 
 _log "Applying dotfiles"
 chezmoi apply
