@@ -58,3 +58,30 @@ func TestDefaultStateFile_FallbackToHome(t *testing.T) {
 		t.Errorf("DefaultStateFile() = %q, want %q", got, want)
 	}
 }
+
+func TestChezmoiConfigFile_WithXDGConfigHome(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg-config")
+
+	got, err := ChezmoiConfigFile()
+	if err != nil {
+		t.Fatalf("ChezmoiConfigFile() error = %v", err)
+	}
+	want := "/tmp/xdg-config/chezmoi/chezmoi.toml"
+	if got != want {
+		t.Errorf("ChezmoiConfigFile() = %q, want %q", got, want)
+	}
+}
+
+func TestChezmoiConfigFile_FallbackToHome(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", "")
+	t.Setenv("HOME", "/tmp/fakehome")
+
+	got, err := ChezmoiConfigFile()
+	if err != nil {
+		t.Fatalf("ChezmoiConfigFile() error = %v", err)
+	}
+	want := filepath.Join("/tmp/fakehome", ".config", "chezmoi", "chezmoi.toml")
+	if got != want {
+		t.Errorf("ChezmoiConfigFile() = %q, want %q", got, want)
+	}
+}
