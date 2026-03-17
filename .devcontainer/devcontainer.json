@@ -7,9 +7,9 @@
   "remoteUser": "vscode",
   "workspaceFolder": "/workspace",
   "remoteEnv": {
-    "PATH": "/home/vscode/.local/bin:${PATH}",
-    "XDG_CONFIG_HOME": "/tmp/xdg-config",
-    "XDG_DATA_HOME": "/tmp/xdg-data"
+    "PATH": "/home/vscode/.local/bin:/home/vscode/.local/share/mise/shims:${PATH}",
+    "XDG_CONFIG_HOME": "/home/vscode/.config",
+    "XDG_DATA_HOME": "/home/vscode/.local/share"
   },
   "postCreateCommand": "bash /workspace/.devcontainer/init.sh",
   "customizations": {

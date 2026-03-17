@@ -1,4 +1,4 @@
-.PHONY: build test vet fmt lint install help
+.PHONY: build test test-e2e vet fmt lint install help
 
 INSTALL_DIR ?= $(HOME)/.local/bin
 
@@ -19,8 +19,11 @@ install: build ## build and symlink binary to $$INSTALL_DIR (default: $(INSTALL_
 	mkdir -p $(INSTALL_DIR)
 	ln -sf $(CURDIR)/bin/chezmoi-recipes $(INSTALL_DIR)/chezmoi-recipes
 
-test: ## run tests with race detector
+test: ## run unit tests with race detector
 	go test -race ./...
+
+test-e2e: ## run e2e tests with bats (requires container or CHEZMOI_RECIPES_E2E=1)
+	bats test/e2e/
 
 vet: ## run go vet
 	go vet ./...

@@ -9,8 +9,9 @@ echo 'eval "$(mise activate zsh)"' >>~/.zshrc
 mise trust
 mise install
 
-# Activate for this shell
+# Activate for this shell and generate shims for non-interactive use (crib run)
 eval "$(mise activate bash)"
+MISE_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/mise" mise reshim
 
 # Download Go dependencies
 go mod download
@@ -22,14 +23,12 @@ make build
 mkdir -p ~/.local/bin
 ln -sf /workspace/bin/chezmoi-recipes ~/.local/bin/chezmoi-recipes
 
-# Install chezmoi
-sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
-
 # Create XDG directories for testing
 mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME"
 
-echo "✓ Development environment ready"
-echo "  - Go tools installed via mise"
+echo "Development environment ready"
+echo "  - Go tools installed via mise (go, bats, chezmoi, golangci-lint, goreleaser)"
 echo "  - Project built at bin/chezmoi-recipes"
 echo "  - Use 'make test' to run tests"
+echo "  - Use 'make test-e2e' to run e2e tests (bats)"
 echo "  - Use 'make lint' to lint code"

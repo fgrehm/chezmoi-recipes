@@ -1,5 +1,6 @@
 [tools]
 go = "1.25.0"
+bats = "latest"
 chezmoi = "latest"
 golangci-lint = "latest"
 goreleaser = "latest"
