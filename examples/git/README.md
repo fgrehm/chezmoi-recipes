@@ -12,8 +12,8 @@ Git version control configuration with sensible defaults and shell aliases.
 
 ## Prerequisites
 
-- Run `chezmoi-recipes init` to set name and email template variables
-- Apply the `shell` recipe for aliases to be sourced via `~/.shellrc.d/`
+- Run `chezmoi init` to set name and email template variables (prompted at init time)
+- Shell aliases in `dot_shellrc.d/git.sh` require a `~/.shellrc` loader that sources `~/.shellrc.d/*.sh`
 
 ## Template variables
 

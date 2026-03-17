@@ -204,13 +204,10 @@ chezmoi-recipes overlay git      # overlay a specific recipe
 
 Example recipes live in `examples/` in the chezmoi-recipes repo. They are reference implementations you can copy into your own `recipes/` directory.
 
-| Recipe | What it does |
-|--------|-------------|
-| `git` | Git config (templated user identity, SSH signing), global gitignore, shell aliases |
-| `neovim` | Installs Neovim from GitHub releases, LazyVim plugin framework, full editor config |
-| `alacritty` | GPU terminal config (font, keybindings), sets as default terminal |
-| `shell` | Oh My Zsh, zshrc with custom git prompt, bashrc, modular shellrc.d loader |
-| `ripgrep` | Installs ripgrep via apt |
+| Recipe | What it demonstrates |
+|--------|---------------------|
+| `git` | Templated config, SSH signing, global gitignore, shell aliases via `shellrc.d/` |
+| `ripgrep` | Minimal recipe: apt install only, no managed config |
 
 ## Usage
 

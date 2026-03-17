@@ -1,0 +1,27 @@
+#!/bin/env bash
+# vi: ft=bash
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+
+source "$CHEZMOI_SOURCE_DIR/scripts/ui.bash"
+
+if dpkg -s ripgrep &>/dev/null; then
+  log_skip "ripgrep already installed"
+  exit 0
+fi
+
+# {{ if ne .chezmoi.username "root" }}
+SUDO="sudo"
+# {{ else }}
+SUDO=""
+# {{ end }}
+
+_install() {
+  set -e
+  $SUDO apt-get update -qq
+  $SUDO apt-get install -y ripgrep
+}
+
+if ! _install; then
+  log_error "Failed to install ripgrep"
+  log_info "Run 'chezmoi apply' again after fixing the issue."
+fi
