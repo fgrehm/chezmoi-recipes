@@ -1,6 +1,6 @@
 # chezmoi-recipes
 
-A Go CLI that overlays modular recipe directories into a [chezmoi](https://www.chezmoi.io/) source directory. On `chezmoi apply`, an `apply.pre` hook runs `chezmoi-recipes pull` (git pull on the dotfiles repo), then a `read-source-state.pre` hook runs `chezmoi-recipes overlay` (copies recipe files into the source dir). Both steps are automatic.
+A Go CLI that adds a recipe layer on top of [chezmoi](https://www.chezmoi.io/). The user's dotfiles repo is the chezmoi working tree. A `.chezmoiroot` file points chezmoi at a gitignored `compiled-home/` directory, rebuilt from `home/` (tracked source files) + `recipes/` (recipe fragments) on every `read-source-state.pre` hook. chezmoi does all the real work.
 
 ## Tech stack
 
@@ -15,11 +15,11 @@ cmd/chezmoi-recipes/
   main.go               # signal context + ExecuteContext
   cmd/                  # one file per Cobra subcommand
 internal/
-  overlay/              # Plan + Execute: copy recipe chezmoi/ files → source dir
-  paths/                # XDG path resolution, returns (string, error)
+  overlay/              # ClearDir + CopyTree + recipe overlay -> compiled-home/
+  paths/                # path helpers (CompiledHomeDir, HomeDir, XDG state dir)
   recipe/               # recipe discovery and loading
   scaffold/             # new recipe skeleton generation
-  setup/                # init command: config template + shared scripts
+  setup/                # init: .chezmoiroot, home/, config template, .gitignore
   state/                # JSON state file, atomic write via rename
   ignore/               # .recipeignore: Go template parsed against chezmoi TOML data
 examples/               # reference recipe implementations
@@ -77,4 +77,4 @@ fix(overlay): handle missing home directory
 - **Flat recipes.** No composition or inheritance between recipes.
 - **Atomic state.** Write state via `os.CreateTemp` + `os.Rename`, not `os.WriteFile`.
 - **XDG paths.** All runtime paths go through `internal/paths`. No hardcoded `~/.config` or `~/.local`.
-- **`chezmoi update` does not work.** The chezmoi source dir is a generated overlay with no git remote. chezmoi's own pull step fails before `apply.pre` fires. Workaround: `chezmoi-recipes pull && chezmoi apply`. See `docs/chezmoi-integration.md`.
+- **`chezmoi update` works natively.** The dotfiles repo is the chezmoi working tree. `chezmoi update` pulls the repo, then `read-source-state.pre` rebuilds `compiled-home/`. See `docs/chezmoi-integration.md`.

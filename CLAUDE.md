@@ -58,7 +58,7 @@ chore(deps): update cobra to v1.11
 
 ## What this is
 
-A Go CLI that adds a recipe layer on top of [chezmoi](https://www.chezmoi.io/). Recipes are directories of chezmoi source fragments. On `chezmoi apply`, an `apply.pre` hook pulls the latest dotfiles repo changes, then a `read-source-state.pre` hook overlays the recipes into the chezmoi source directory. chezmoi does all the real work (dotfile management, scripts, templates).
+A Go CLI that adds a recipe layer on top of [chezmoi](https://www.chezmoi.io/). The user's dotfiles repo is the chezmoi working tree. A `.chezmoiroot` file points chezmoi at a gitignored `compiled-home/` directory, rebuilt from `home/` (tracked source files) + `recipes/` (recipe fragments) on every `read-source-state.pre` hook. chezmoi does all the real work (dotfile management, scripts, templates).
 
 **Tech stack:** Go, [Cobra](https://github.com/spf13/cobra), [BurntSushi/toml](https://github.com/BurntSushi/toml). Target: Debian 13 (Trixie).
 
@@ -66,7 +66,7 @@ A Go CLI that adds a recipe layer on top of [chezmoi](https://www.chezmoi.io/). 
 
 - **Recipes are directories.** A recipe is a directory with a `README.md` and optional `chezmoi/` subdirectory. The directory name is the recipe name. Any subdirectory with a `README.md` is a recipe.
 - **Flat structure.** No composition or inheritance between recipes. Each is independent.
-- **chezmoi integration via two hooks.** `apply.pre` runs `chezmoi-recipes pull` (git pull on the dotfiles repo, `--on-error warn` by default). `read-source-state.pre` runs `chezmoi-recipes overlay`. User workflow is `chezmoi apply`. `chezmoi update` does not work -- the generated source dir has no git remote. See `docs/chezmoi-integration.md`.
+- **chezmoi integration via `.chezmoiroot`.** The dotfiles repo is the chezmoi working tree. `.chezmoiroot` points at a gitignored `compiled-home/` directory. `read-source-state.pre` runs `chezmoi-recipes overlay` to rebuild `compiled-home/` from `home/` + `recipes/`. Guard hooks block commands that would write to `compiled-home/` (`add`, `edit`, `re-add`, etc.). `chezmoi update` works natively. See `docs/chezmoi-integration.md`.
 - **Stay thin.** chezmoi-recipes overlays files only. Package management, dependency resolution, and idempotency belong to chezmoi scripts inside recipes. Crossing that line means reimplementing Ansible.
 - **Remove deletes, does not undo.** `remove` deletes files from the source directory and state. It does not reverse script side effects (installed packages, system config changes).
 - **User data stays out of recipes.** Name, email, machine paths live in `.chezmoi.toml.tmpl` via chezmoi template variables, not in recipe files.
@@ -79,17 +79,17 @@ cmd/chezmoi-recipes/
   main.go               # signal context, calls ExecuteContext
   cmd/                  # one file per Cobra subcommand
 internal/
-  overlay/              # Plan + Execute: walk recipe chezmoi/ → source dir
-  paths/                # XDG path resolution (returns string, error)
+  overlay/              # ClearDir + CopyTree + recipe overlay -> compiled-home/
+  paths/                # path helpers (CompiledHomeDir, HomeDir, XDG state dir)
   recipe/               # discover and load recipe directories
   scaffold/             # generate new recipe skeletons
-  setup/                # init: write .chezmoi.toml.tmpl, deploy shared scripts
+  setup/                # init: .chezmoiroot, home/, config template, .gitignore
   state/                # JSON state file (atomic write via rename)
   ignore/               # .recipeignore parsing (Go template + TOML data)
 examples/               # reference recipe implementations
   <name>/
     README.md
-    chezmoi/            # source state fragment overlaid into chezmoi source dir
+    chezmoi/            # source state fragment overlaid into compiled-home/
 ```
 
 Runtime:
@@ -98,17 +98,15 @@ Runtime:
 ## CLI commands
 
 ```
-chezmoi-recipes init                  # set up .chezmoi.toml.tmpl, shared scripts, recipes dir
-chezmoi-recipes pull                  # git pull on the dotfiles repo (called by apply.pre hook)
-chezmoi-recipes pull --on-error warn  # warn and continue if pull fails (e.g. offline)
-chezmoi-recipes overlay [recipe...]   # overlay recipe files into source dir (called by read-source-state.pre hook)
+chezmoi-recipes init                  # set up .chezmoiroot, home/, config template, .gitignore
+chezmoi-recipes overlay [recipe...]   # rebuild compiled-home/ from home/ + recipes/ (called by read-source-state.pre hook)
 chezmoi-recipes overlay --dry-run     # preview without writing
 chezmoi-recipes list [--json]         # list available recipes
 chezmoi-recipes scaffold <recipe>     # generate new recipe skeleton
-chezmoi-recipes remove <recipe>       # remove recipe files from source dir and state
+chezmoi-recipes remove <recipe>       # remove recipe files from compiled-home/ and state
 chezmoi-recipes status                # show applied recipes and their files
 ```
 
-Global flags: `--recipes-dir` (default `./recipes`), `--source-dir`.
+Global flags: `--recipes-dir` (default `./recipes`).
 
-Primary user workflow: `chezmoi apply` pulls the dotfiles repo and overlays recipes automatically via the two hooks.
+Primary user workflow: `chezmoi apply` overlays recipes automatically via the `read-source-state.pre` hook. `chezmoi update` pulls and applies.
