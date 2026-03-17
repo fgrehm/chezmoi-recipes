@@ -117,36 +117,36 @@ const chezmoiConfigTemplate = `{{- /* Auto-detect environment */ -}}
     args = ["overlay", "--quiet", "--recipes-dir", %[1]q]
 
 [hooks.add.pre]
-    command = "echo"
-    args = ["Error: use home/ or recipes/ instead of chezmoi add (compiled-home/ is generated)"]
+    command = "sh"
+    args = ["-c", "echo 'Error: use home/ or recipes/ instead of chezmoi add (compiled-home/ is generated)' >&2; exit 1"]
 
 [hooks.edit.pre]
-    command = "echo"
-    args = ["Error: use home/ or recipes/ instead of chezmoi edit (compiled-home/ is generated)"]
+    command = "sh"
+    args = ["-c", "echo 'Error: use home/ or recipes/ instead of chezmoi edit (compiled-home/ is generated)' >&2; exit 1"]
 
 [hooks.re-add.pre]
-    command = "echo"
-    args = ["Error: use home/ or recipes/ instead of chezmoi re-add (compiled-home/ is generated)"]
+    command = "sh"
+    args = ["-c", "echo 'Error: use home/ or recipes/ instead of chezmoi re-add (compiled-home/ is generated)' >&2; exit 1"]
 
 [hooks.merge.pre]
-    command = "echo"
-    args = ["Error: use home/ or recipes/ instead of chezmoi merge (compiled-home/ is generated)"]
+    command = "sh"
+    args = ["-c", "echo 'Error: use home/ or recipes/ instead of chezmoi merge (compiled-home/ is generated)' >&2; exit 1"]
 
 [hooks.chattr.pre]
-    command = "echo"
-    args = ["Error: use home/ or recipes/ instead of chezmoi chattr (compiled-home/ is generated)"]
+    command = "sh"
+    args = ["-c", "echo 'Error: use home/ or recipes/ instead of chezmoi chattr (compiled-home/ is generated)' >&2; exit 1"]
 
 [hooks.import.pre]
-    command = "echo"
-    args = ["Error: use home/ or recipes/ instead of chezmoi import (compiled-home/ is generated)"]
+    command = "sh"
+    args = ["-c", "echo 'Error: use home/ or recipes/ instead of chezmoi import (compiled-home/ is generated)' >&2; exit 1"]
 
 [hooks.forget.pre]
-    command = "echo"
-    args = ["Error: use home/ or recipes/ instead of chezmoi forget (compiled-home/ is generated)"]
+    command = "sh"
+    args = ["-c", "echo 'Error: use home/ or recipes/ instead of chezmoi forget (compiled-home/ is generated)' >&2; exit 1"]
 
 [hooks.destroy.pre]
-    command = "echo"
-    args = ["Error: use home/ or recipes/ instead of chezmoi destroy (compiled-home/ is generated)"]
+    command = "sh"
+    args = ["-c", "echo 'Error: use home/ or recipes/ instead of chezmoi destroy (compiled-home/ is generated)' >&2; exit 1"]
 
 [data]
     recipesDir = %[1]q

@@ -99,6 +99,21 @@ chezmoi_init() {
   chezmoi init --no-tty --source "$source_dir"
 }
 
+# Build chezmoi-recipes binary if not already built.
+# Places it in a temp bin/ directory and prepends to PATH so it
+# takes precedence over any system-installed version.
+build_chezmoi_recipes() {
+  local bin_dir="${BATS_SUITE_TMPDIR:-/tmp}/chezmoi-recipes-e2e-bin"
+  local bin_path="$bin_dir/chezmoi-recipes"
+  if [ ! -x "$bin_path" ]; then
+    mkdir -p "$bin_dir"
+    local project_root
+    project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+    go build -o "$bin_path" "$project_root/cmd/chezmoi-recipes"
+  fi
+  export PATH="$bin_dir:$PATH"
+}
+
 # Clean up temp dirs. Call in teardown().
 cleanup() {
   [ -n "${DOTFILES:-}" ] && rm -rf "$DOTFILES"
