@@ -39,6 +39,18 @@ func ChezmoiConfigFile() (string, error) {
 	return filepath.Join(dir, "chezmoi.toml"), nil
 }
 
+// CompiledHomeDir returns the compiled-home directory path within a repo root.
+// This is where the overlay writes merged files from home/ and recipes/.
+func CompiledHomeDir(repoRoot string) string {
+	return filepath.Join(repoRoot, "compiled-home")
+}
+
+// HomeDir returns the home directory path within a repo root.
+// This is where users place freeform chezmoi source files.
+func HomeDir(repoRoot string) string {
+	return filepath.Join(repoRoot, "home")
+}
+
 func chezmoiConfigDir() (string, error) {
 	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
 		return filepath.Join(xdg, "chezmoi"), nil

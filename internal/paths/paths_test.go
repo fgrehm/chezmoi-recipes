@@ -85,3 +85,19 @@ func TestChezmoiConfigFile_FallbackToHome(t *testing.T) {
 		t.Errorf("ChezmoiConfigFile() = %q, want %q", got, want)
 	}
 }
+
+func TestCompiledHomeDir(t *testing.T) {
+	got := CompiledHomeDir("/home/user/dotfiles")
+	want := "/home/user/dotfiles/compiled-home"
+	if got != want {
+		t.Errorf("CompiledHomeDir() = %q, want %q", got, want)
+	}
+}
+
+func TestHomeDir(t *testing.T) {
+	got := HomeDir("/home/user/dotfiles")
+	want := "/home/user/dotfiles/home"
+	if got != want {
+		t.Errorf("HomeDir() = %q, want %q", got, want)
+	}
+}
