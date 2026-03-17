@@ -16,7 +16,7 @@ chezmoi already handles dotfile management, script execution, and templating. ch
 
 chezmoi is great for managing dotfiles. But its source directory is flat by design: every file mirrors a path in your home directory, and there's no built-in way to group related files together.
 
-This works fine at first. Once you're managing 10+ tools, the source directory becomes a wall of `dot_`, `private_`, and `run_once_` files with no logical grouping. It gets hard to tell which files belong to which tool, what scripts are for what, and what you can safely remove.
+This works fine at first. Once you're managing lots of "stuff", the source directory becomes a wall of `dot_`, `private_`, and `run_once_` files with no logical grouping. It gets hard to tell which files belong to which tool, what scripts are for what, and what you can safely remove.
 
 The usual workarounds within chezmoi:
 
@@ -118,12 +118,12 @@ See `docs/chezmoi-integration.md` for the full integration design.
 | Language   | Go                |
 | Foundation | chezmoi           |
 | Target OS  | Debian 13 (Trixie)|
-| Platform   | Linux (macOS and Windows support planned) |
+| Platform   | Linux (macOS and Windows support can be added if enough interest) |
 | License    | MIT               |
 
 ## Installation
 
-**Linux only** (macOS and Windows support planned).
+**Linux only** (macOS and Windows if enough interest).
 
 **Install script** (recommended): installs chezmoi and chezmoi-recipes, then optionally clones and applies a dotfiles repo.
 
@@ -138,6 +138,15 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/mai
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- username/repo
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- https://github.com/username/repo
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- git@github.com:username/repo
+
+# Custom bin directory (-b, like chezmoi's install script)
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- -b ~/bin username
+
+# Pin versions (-t for chezmoi-recipes, --chezmoi-tag for chezmoi)
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- -t v0.2.0 --chezmoi-tag v2.61.0 username
+
+# Custom dotfiles location
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- --dotfiles-dir ~/projects/dotfiles username
 ```
 
 **Go install:**
@@ -261,7 +270,7 @@ Requires [shfmt](https://github.com/mvdan/sh) and [shellcheck](https://www.shell
 chezmoi-recipes deploys logging helpers (`log_info`, `log_skip`, `log_error`, `run_quiet`) to the chezmoi source directory. Recipe scripts can source them:
 
 ```bash
-source "$CHEZMOI_SOURCE_DIR/scripts/ui.bash"
+source "${CHEZMOI_SOURCE_DIR}/scripts/ui.bash"
 ```
 
 ### Template data
