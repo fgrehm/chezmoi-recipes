@@ -25,7 +25,7 @@ by the recipe's chezmoi scripts (installed packages, etc.).`,
 		if err != nil {
 			return fmt.Errorf("resolving state file: %w", err)
 		}
-		return runRemove(cmd.Context(), args[0], sourceDir(), stateFile, os.Stdout)
+		return runRemove(cmd.Context(), args[0], compiledHomeDir(), stateFile, os.Stdout)
 	},
 }
 

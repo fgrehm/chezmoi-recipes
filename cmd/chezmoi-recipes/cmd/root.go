@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"path/filepath"
 
 	"github.com/fgrehm/chezmoi-recipes/internal/paths"
 	"github.com/spf13/cobra"
@@ -16,11 +17,6 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.PersistentFlags().String("recipes-dir", "./recipes", "path to recipes directory")
-	sourceDir, err := paths.DefaultSourceDir()
-	if err != nil {
-		sourceDir = ""
-	}
-	rootCmd.PersistentFlags().String("source-dir", sourceDir, "path to chezmoi source directory managed by chezmoi-recipes")
 }
 
 // recipesDir returns the value of the --recipes-dir persistent flag.
@@ -29,10 +25,19 @@ func recipesDir() string {
 	return dir
 }
 
-// sourceDir returns the value of the --source-dir persistent flag.
-func sourceDir() string {
-	dir, _ := rootCmd.PersistentFlags().GetString("source-dir")
-	return dir
+// repoRoot returns the repo root derived from the recipes directory.
+// The recipes directory is expected to be a direct child of the repo root.
+func repoRoot() string {
+	abs, err := filepath.Abs(recipesDir())
+	if err != nil {
+		return filepath.Dir(recipesDir())
+	}
+	return filepath.Dir(abs)
+}
+
+// compiledHomeDir returns the compiled-home path derived from the recipes directory.
+func compiledHomeDir() string {
+	return paths.CompiledHomeDir(repoRoot())
 }
 
 func Execute() error {
