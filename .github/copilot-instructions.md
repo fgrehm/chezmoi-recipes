@@ -1,6 +1,6 @@
 # chezmoi-recipes
 
-A Go CLI that overlays modular recipe directories into a [chezmoi](https://www.chezmoi.io/) source directory via a `read-source-state.pre` hook. Recipes are directories of chezmoi source fragments; `chezmoi apply` triggers the overlay automatically.
+A Go CLI that overlays modular recipe directories into a [chezmoi](https://www.chezmoi.io/) source directory. On `chezmoi apply`, an `apply.pre` hook runs `chezmoi-recipes pull` (git pull on the dotfiles repo), then a `read-source-state.pre` hook runs `chezmoi-recipes overlay` (copies recipe files into the source dir). Both steps are automatic.
 
 ## Tech stack
 

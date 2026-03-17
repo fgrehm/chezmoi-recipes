@@ -36,7 +36,7 @@ chezmoi-recipes takes a different approach: keep chezmoi as the foundation (temp
 
 ## How it works
 
-chezmoi-recipes overlays recipe files into chezmoi's source directory. It integrates via chezmoi's `read-source-state.pre` hook, so the overlay happens automatically before chezmoi reads source state. Your workflow is just `chezmoi apply`.
+chezmoi-recipes overlays recipe files into chezmoi's source directory. It integrates via two chezmoi hooks: `apply.pre` pulls the latest changes from your dotfiles repo, and `read-source-state.pre` overlays the recipes into the source directory. Your workflow is just `chezmoi apply`.
 
 ```
 your-repo/recipes/git/chezmoi/  ───┐
@@ -176,9 +176,12 @@ make install  # Installs to ~/.local/bin
    chezmoi apply
    ```
 
-chezmoi-recipes integrates via chezmoi's `read-source-state.pre` hook, so `chezmoi apply` automatically overlays your recipes first. You can also run the overlay manually:
+chezmoi-recipes integrates via two chezmoi hooks. `apply.pre` runs `chezmoi-recipes pull`, which pulls the latest changes from your dotfiles repo (warning and continuing if offline). `read-source-state.pre` runs `chezmoi-recipes overlay`, which overlays the recipes into the source directory. Both fire automatically on `chezmoi apply`.
+
+You can also run either step manually:
 
 ```bash
+chezmoi-recipes pull             # pull latest changes from the dotfiles repo
 chezmoi-recipes overlay          # overlay all recipes into source dir
 chezmoi-recipes overlay git      # overlay a specific recipe
 ```
@@ -207,11 +210,15 @@ chezmoi init
 # List available recipes
 chezmoi-recipes list
 
-# Apply all recipes (via chezmoi hook)
+# Pull latest recipe changes and apply (via chezmoi hooks)
 chezmoi apply
 
 # Preview what chezmoi would do
 chezmoi diff
+
+# Pull latest changes from the dotfiles repo manually
+chezmoi-recipes pull
+chezmoi-recipes pull --on-error warn   # warn and continue if offline
 
 # Overlay manually (without running chezmoi)
 chezmoi-recipes overlay
@@ -265,7 +272,7 @@ source "$CHEZMOI_SOURCE_DIR/scripts/ui.bash"
 | `isDebian` | Auto-detected from `.chezmoi.osRelease.id` |
 | `hasNvidiaGPU` | Auto-detected via `lspci` (skipped in containers) |
 
-Recipes reference these via chezmoi templates (e.g., `{{ .name }}` in `.tmpl` files). The hook config (`[hooks.read-source-state.pre]`) is also included in the template, so `chezmoi apply` automatically triggers the overlay.
+Recipes reference these via chezmoi templates (e.g., `{{ .name }}` in `.tmpl` files). Both hook configs (`[hooks.apply.pre]` and `[hooks.read-source-state.pre]`) are included in the template, so `chezmoi apply` automatically pulls and overlays.
 
 ## Development
 

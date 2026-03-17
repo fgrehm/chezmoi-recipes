@@ -4,11 +4,12 @@ How chezmoi-recipes integrates with [chezmoi](https://www.chezmoi.io/). For chez
 
 ## Integration approach
 
-chezmoi-recipes integrates via chezmoi's [`read-source-state.pre` hook](https://www.chezmoi.io/reference/configuration-file/hooks/). Before chezmoi reads its source state, the hook runs `chezmoi-recipes overlay`, which copies recipe files into the chezmoi source directory. chezmoi then reads the populated source directory and applies as normal.
+chezmoi-recipes integrates via two [chezmoi hooks](https://www.chezmoi.io/reference/configuration-file/hooks/):
+
+- **`apply.pre`** runs `chezmoi-recipes pull`, which does a `git pull` on the repository containing the recipes directory. This keeps the dotfiles repo up to date before anything else runs. If the pull fails (e.g. offline), the default behavior is to warn and continue.
+- **`read-source-state.pre`** runs `chezmoi-recipes overlay`, which copies recipe files into the chezmoi source directory. This fires for any chezmoi command that reads source state (`apply`, `diff`, `status`, `data`, etc.), so the source directory is always up to date.
 
 The user's primary workflow is just `chezmoi apply`. chezmoi-recipes is invisible infrastructure.
-
-The hook fires for any chezmoi command that reads source state (`apply`, `diff`, `status`, `data`, etc.), so the source directory is always up to date.
 
 ## Ownership model
 
@@ -25,13 +26,18 @@ Neither tool reaches into the other's domain.
 ```
 User runs: chezmoi apply
 
-  1. read-source-state.pre hook fires
+  1. apply.pre hook fires
+     chezmoi-recipes pull:
+       a. Walk up from recipes dir to find the enclosing git repo
+       b. Run git pull (warn and continue if it fails)
+
+  2. read-source-state.pre hook fires
      chezmoi-recipes overlay:
        a. Overlay each recipe's chezmoi/ into source dir (alphabetically)
        b. Record state to ~/.local/share/chezmoi-recipes/
 
-  2. chezmoi reads source state
-  3. chezmoi applies (files, scripts, templates) to ~/
+  3. chezmoi reads source state
+  4. chezmoi applies (files, scripts, templates) to ~/
 ```
 
 The overlay is idempotent: running it multiple times with unchanged recipes produces the same result.
