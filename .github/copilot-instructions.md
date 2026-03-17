@@ -77,3 +77,4 @@ fix(overlay): handle missing home directory
 - **Flat recipes.** No composition or inheritance between recipes.
 - **Atomic state.** Write state via `os.CreateTemp` + `os.Rename`, not `os.WriteFile`.
 - **XDG paths.** All runtime paths go through `internal/paths`. No hardcoded `~/.config` or `~/.local`.
+- **`chezmoi update` does not work.** The chezmoi source dir is a generated overlay with no git remote. chezmoi's own pull step fails before `apply.pre` fires. Workaround: `chezmoi-recipes pull && chezmoi apply`. See `docs/chezmoi-integration.md`.

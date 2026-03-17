@@ -220,6 +220,10 @@ chezmoi diff
 chezmoi-recipes pull
 chezmoi-recipes pull --on-error warn   # warn and continue if offline
 
+# Note: chezmoi update does NOT work -- the chezmoi source directory has no git
+# remote, so chezmoi's own pull step fails. Use chezmoi-recipes pull + chezmoi apply.
+# See docs/chezmoi-integration.md for details.
+
 # Overlay manually (without running chezmoi)
 chezmoi-recipes overlay
 

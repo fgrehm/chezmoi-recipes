@@ -42,6 +42,25 @@ User runs: chezmoi apply
 
 The overlay is idempotent: running it multiple times with unchanged recipes produces the same result.
 
+## `chezmoi update` limitation
+
+`chezmoi update` is chezmoi's built-in "pull and apply" command: it runs `git pull` on the chezmoi source directory, then `chezmoi apply`. It does not work with this architecture.
+
+The chezmoi source directory (`~/.local/share/chezmoi-recipes/source/`) is a generated overlay with no git remote. When `chezmoi update` runs, chezmoi's own pull step fails immediately with "no remote configured". The `apply.pre` hook (and therefore `chezmoi-recipes pull`) never fires.
+
+chezmoi does expose `CHEZMOI_COMMAND` in all hooks, and every command including `update` supports `.pre`/`.post` hooks -- so a `[hooks.update.pre]` entry would fire at the right time. But the failure at chezmoi's own pull step still makes the overall command unusable.
+
+**Workaround:** use `chezmoi apply` as your daily driver (the `apply.pre` hook pulls automatically on every apply), or run the two steps explicitly when you want finer control:
+
+```bash
+chezmoi-recipes pull   # pull dotfiles repo
+chezmoi apply          # overlay and apply
+```
+
+To opt out of automatic pulling entirely, remove the `[hooks.apply.pre]` entry from `~/.config/chezmoi/chezmoi.toml` and run `chezmoi-recipes pull` manually.
+
+A `--no-pull` flag on `chezmoi update` would resolve this cleanly. See the upstream issue draft in `ISSUE.md` at the repo root.
+
 ## State tracking
 
 chezmoi-recipes and chezmoi each maintain independent state:

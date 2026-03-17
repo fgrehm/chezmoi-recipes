@@ -66,7 +66,7 @@ A Go CLI that adds a recipe layer on top of [chezmoi](https://www.chezmoi.io/). 
 
 - **Recipes are directories.** A recipe is a directory with a `README.md` and optional `chezmoi/` subdirectory. The directory name is the recipe name. Any subdirectory with a `README.md` is a recipe.
 - **Flat structure.** No composition or inheritance between recipes. Each is independent.
-- **chezmoi integration via two hooks.** `apply.pre` runs `chezmoi-recipes pull` (git pull on the dotfiles repo, `--on-error warn` by default). `read-source-state.pre` runs `chezmoi-recipes overlay`. User workflow is `chezmoi apply`. See `docs/chezmoi-integration.md`.
+- **chezmoi integration via two hooks.** `apply.pre` runs `chezmoi-recipes pull` (git pull on the dotfiles repo, `--on-error warn` by default). `read-source-state.pre` runs `chezmoi-recipes overlay`. User workflow is `chezmoi apply`. `chezmoi update` does not work -- the generated source dir has no git remote. See `docs/chezmoi-integration.md`.
 - **Stay thin.** chezmoi-recipes overlays files only. Package management, dependency resolution, and idempotency belong to chezmoi scripts inside recipes. Crossing that line means reimplementing Ansible.
 - **Remove deletes, does not undo.** `remove` deletes files from the source directory and state. It does not reverse script side effects (installed packages, system config changes).
 - **User data stays out of recipes.** Name, email, machine paths live in `.chezmoi.toml.tmpl` via chezmoi template variables, not in recipe files.
