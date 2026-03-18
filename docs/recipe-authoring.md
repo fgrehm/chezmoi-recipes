@@ -347,7 +347,7 @@ private_dot_config/alacritty/
 {{ end }}
 ```
 
-During a full overlay, all per-recipe `.chezmoiignore` files are merged into the source directory's `.chezmoiignore`. Template syntax is passed through verbatim for chezmoi to evaluate at apply time.
+During a full overlay, all per-recipe `.chezmoiignore` files are merged into `compiled-home/.chezmoiignore`. Template syntax is passed through verbatim for chezmoi to evaluate at apply time.
 
 ### Conditional behavior within a recipe
 
@@ -382,21 +382,11 @@ Keep recipe-specific data inline: hard-code values in script bodies, use
 `.tmpl` files for template variables, or use `.chezmoidata.toml` files at the
 source root with namespaced keys (e.g., `[packages]`, `[completions]`).
 
-### Partial overlay failure leaves untracked files
+### Partial overlay failure
 
-If `chezmoi apply` is interrupted mid-overlay (network failure, disk error, killed
-process), some recipe files may have been written to the source directory without the
-state store being updated. On the next run, those files appear as untracked conflicts.
+If `chezmoi apply` is interrupted mid-overlay (disk error, killed process), `compiled-home/` may be in an incomplete state. This is self-healing: the next overlay clears and rebuilds `compiled-home/` from scratch. Just run `chezmoi apply` again.
 
-Resolution: remove the conflicting files from the source directory manually, then run
-`chezmoi apply` again. The overlay will re-copy them and record ownership correctly.
-
-```bash
-rm -rf ~/.local/share/chezmoi-recipes/source/<path/to/conflicting/file>
-chezmoi apply
-```
-
-Or use `chezmoi-recipes overlay --dry-run` first to see what would be written.
+Use `chezmoi-recipes overlay --dry-run` to preview what the overlay would write.
 
 ### `.chezmoiignore` entries strip the lifecycle prefix and `.tmpl` suffix
 

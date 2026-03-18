@@ -118,7 +118,7 @@ func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipes
 
 	total := len(recipes)
 	multi := total > 1
-	var totalAdded int
+	var totalAdded, totalUpdated int
 
 	if !quiet && multi {
 		if dryRun {
@@ -150,6 +150,7 @@ func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipes
 		store.RecordRecipe(r.Name, result.AllFiles())
 
 		totalAdded += len(result.Added)
+		totalUpdated += len(result.Updated)
 
 		if !quiet {
 			printRecipeResult(w, r.Name, result, i+1, total, multi, dryRun)
@@ -190,7 +191,7 @@ func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipes
 
 	// Summary line (not for dry-run, not for quiet).
 	if !quiet && !dryRun {
-		printSummary(w, total, totalAdded, 0, 0)
+		printSummary(w, total, totalAdded, totalUpdated, 0)
 	}
 
 	return nil

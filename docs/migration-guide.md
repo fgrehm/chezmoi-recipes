@@ -57,12 +57,11 @@ Some files don't belong to any single tool. These need special handling (see Ste
 ## Step 2: Set up chezmoi-recipes
 
 ```bash
-# Initialize: creates recipes/ dir, chezmoi source dir, .chezmoi.toml.tmpl, shared scripts
+# Initialize: creates home/, .chezmoiroot, .gitignore, config template, recipes/ dir
 chezmoi-recipes init --recipes-dir ./recipes
 
-# Re-configure chezmoi to use the chezmoi-recipes source directory
-# (prompts for name and email if not already in the config)
-chezmoi init --source ~/.local/share/chezmoi-recipes/source
+# Configure chezmoi (prompts for name and email if not already in the config)
+chezmoi init --source .
 ```
 
 Create a `.recipeignore` in your recipes directory for environment filtering. This replaces the per-file entries you had in `.chezmoiignore`:
@@ -365,9 +364,9 @@ Each recipe should work on its own. If recipe B needs a tool from recipe A, reci
 
 Two recipes can't both have `.chezmoiscripts/run_once_install-packages.sh`. Name scripts after the tool: `run_once_install-gh.sh`, `run_once_install-neovim.sh`.
 
-### Watch out for `.chezmoiroot`
+### `.chezmoiroot` is managed by chezmoi-recipes
 
-If your dotfiles repo uses `.chezmoiroot` (e.g., source state lives under `home/`), that convention applies to the old flat layout. With chezmoi-recipes, the source dir is a separate location (`~/.local/share/chezmoi-recipes/source/`), so `.chezmoiroot` no longer applies to your recipe files. Recipes use chezmoi naming directly in their `chezmoi/` subdirectory.
+chezmoi-recipes creates a `.chezmoiroot` file at the repo root pointing at `compiled-home/`. Do not edit or remove it. If your dotfiles repo already uses `.chezmoiroot` for a different purpose, you'll need to reconcile: chezmoi-recipes expects to own this file. Recipes use chezmoi naming directly in their `chezmoi/` subdirectory.
 
 ## End state
 
