@@ -2,7 +2,7 @@
 
 A recipe layer for [chezmoi](https://www.chezmoi.io/).
 
-> **Status: early development.** The core is working but I haven't yet migrated my own dotfiles to it - that's next. Expect rough edges and possible breaking changes. Feedback welcome.
+> **Status: experimental.** This project is under active development and going through rapid iteration. The architecture recently changed (`.chezmoiroot` approach) and I'm about to dogfood it by migrating my own dotfiles. Expect breaking changes. Feedback welcome via [issues](https://github.com/fgrehm/chezmoi-recipes/issues).
 >
 > **Note on chezmoi compatibility:** chezmoi deliberately uses a single source directory with a 1:1 mapping to target state ([design FAQ](https://www.chezmoi.io/user-guide/frequently-asked-questions/design/#can-chezmoi-support-multiple-sources-or-multiple-source-states)). chezmoi-recipes works outside that model by using [`.chezmoiroot`](https://www.chezmoi.io/reference/special-files/chezmoiroot/) to point chezmoi at a generated `compiled-home/` directory, then overlaying multiple recipe fragments into it. Guard hooks block commands like `chezmoi add` and `chezmoi edit` that would write to `compiled-home/` instead of the real source. This is not endorsed by chezmoi and may interact poorly with future chezmoi changes. Use at your own risk.
 
