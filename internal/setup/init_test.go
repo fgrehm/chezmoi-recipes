@@ -10,6 +10,7 @@ import (
 func TestRunInit_CreatesChezmoiroot(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -30,6 +31,7 @@ func TestRunInit_CreatesChezmoiroot(t *testing.T) {
 func TestRunInit_CreatesHomeDir(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -50,6 +52,7 @@ func TestRunInit_CreatesHomeDir(t *testing.T) {
 func TestRunInit_WritesConfigToHome(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -75,6 +78,7 @@ func TestRunInit_WritesConfigToHome(t *testing.T) {
 func TestRunInit_AddsCompiledHomeToGitignore(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -105,6 +109,7 @@ func TestRunInit_AddsCompiledHomeToGitignore(t *testing.T) {
 func TestRunInit_GitignoreIdempotent(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -129,6 +134,7 @@ func TestRunInit_GitignoreIdempotent(t *testing.T) {
 func TestRunInit_ConfigTemplateNoApplyPre(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -154,6 +160,7 @@ func TestRunInit_ConfigTemplateNoApplyPre(t *testing.T) {
 func TestRunInit_ConfigTemplateHasGuardHooks(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -180,6 +187,7 @@ func TestRunInit_ConfigTemplateHasGuardHooks(t *testing.T) {
 func TestRunInit_CompiledHomePopulated(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -197,6 +205,7 @@ func TestRunInit_CompiledHomePopulated(t *testing.T) {
 func TestRunInit_CreatesRecipesDir(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -217,6 +226,7 @@ func TestRunInit_CreatesRecipesDir(t *testing.T) {
 func TestRunInit_SkipExistingConfig(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -237,6 +247,7 @@ func TestRunInit_SkipExistingConfig(t *testing.T) {
 func TestRunInit_ForceOverwriteConfig(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -271,6 +282,7 @@ func TestRunInit_ForceOverwriteConfig(t *testing.T) {
 func TestRunInit_CreatesEditorConfig(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -292,6 +304,7 @@ func TestRunInit_CreatesEditorConfig(t *testing.T) {
 func TestRunInit_CreatesShellcheckRC(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -313,6 +326,7 @@ func TestRunInit_CreatesShellcheckRC(t *testing.T) {
 func TestRunInit_CreatesReadme(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -329,6 +343,7 @@ func TestRunInit_CreatesReadme(t *testing.T) {
 func TestRunInit_DoesNotOverwriteExistingEditorConfig(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -354,6 +369,7 @@ func TestRunInit_DoesNotOverwriteExistingEditorConfig(t *testing.T) {
 func TestRunInit_DoesNotOverwriteExistingShellcheckRC(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -379,6 +395,7 @@ func TestRunInit_DoesNotOverwriteExistingShellcheckRC(t *testing.T) {
 func TestRunInit_DoesNotOverwriteExistingReadme(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -404,6 +421,7 @@ func TestRunInit_DoesNotOverwriteExistingReadme(t *testing.T) {
 func TestWriteChezmoiConfig(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	homeDir := t.TempDir()
 	repoRoot := "/home/user/dotfiles"
@@ -453,6 +471,7 @@ func TestWriteChezmoiConfig(t *testing.T) {
 func TestWriteChezmoiConfig_SkipExisting(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	homeDir := t.TempDir()
 
@@ -472,6 +491,7 @@ func TestWriteChezmoiConfig_SkipExisting(t *testing.T) {
 func TestWriteChezmoiConfig_ForceOverwrite(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	homeDir := t.TempDir()
 
