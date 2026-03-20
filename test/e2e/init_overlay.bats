@@ -107,8 +107,8 @@ TMPL
 
   # chezmoi init with the real template (non-interactive via --promptString)
   chezmoi init --no-tty --source "$DOTFILES" \
-    --promptString name="Test User" \
-    --promptString email="test@example.com"
+    --promptString "name=Test User" \
+    --promptString "email=test@example.com"
 
   # Verify rendered config has expanded {{ .chezmoi.workingTree }}
   local config="$XDG_CONFIG_HOME/chezmoi/chezmoi.toml"
