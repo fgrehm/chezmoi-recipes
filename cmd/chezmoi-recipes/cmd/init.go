@@ -50,7 +50,7 @@ func runInitCmd(recDir string, force bool, w io.Writer) error {
 	if makefileCreated {
 		fmt.Fprintf(w, "  Makefile:      %s (shell-fmt, shell-fmt-check, shell-lint, check)\n", filepath.Join(repoRoot, "Makefile"))
 	}
-	fmt.Fprintln(w, "\nNext step: run 'chezmoi init --source <repo>' to configure user data (name, email).")
+	fmt.Fprintln(w, "\nNext step: run 'chezmoi init --source .' to configure user data (name, email).")
 	fmt.Fprintln(w, "chezmoi will prompt for values defined in .chezmoi.toml.tmpl.")
 
 	return nil

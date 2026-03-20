@@ -25,6 +25,7 @@ TODO: One sentence describing what this recipe sets up.
 
 const installScriptTmpl = `#!/bin/env bash
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# vim: ft=bash.gotmpl
 #
 # chezmoi script naming cheat sheet:
 #
@@ -116,7 +117,8 @@ const chezmoiIgnoreTmpl = `# Per-recipe .chezmoiignore
 # {{ end }}
 `
 
-const configTmpl = `# chezmoi naming conventions (how this path maps to the target):
+const configTmpl = `# vim: ft=toml.gotmpl
+# chezmoi naming conventions (how this path maps to the target):
 #
 #   Source path:  private_dot_config/<name>/config.toml.tmpl
 #   Target path:  ~/.config/<name>/config.toml  (mode 0600)

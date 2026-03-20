@@ -179,6 +179,23 @@ make build
 chezmoi-recipes list
 ```
 
+## Testing dotfiles with chezmoi docker
+
+chezmoi has built-in Docker support for testing dotfiles in a clean environment:
+
+```bash
+# Run chezmoi apply inside a fresh Debian container
+chezmoi docker run -- apply
+
+# Open a shell in a container with your dotfiles applied
+chezmoi docker run -- sh
+
+# Execute a command in a running chezmoi docker container
+chezmoi docker exec -- bash
+```
+
+This can be a simpler alternative to devcontainers for quick smoke tests. Note that the container needs `chezmoi-recipes` available for the overlay hook to work. You may need to bind-mount the binary or install it inside the container. See the [chezmoi Docker docs](https://www.chezmoi.io/reference/commands/docker/) for details.
+
 ## Troubleshooting
 
 ### "command not found: go"
