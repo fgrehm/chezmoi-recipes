@@ -83,7 +83,7 @@ internal/
   paths/                # path helpers (CompiledHomeDir, HomeDir, XDG state dir)
   recipe/               # discover and load recipe directories
   scaffold/             # generate new recipe skeletons
-  setup/                # init: .chezmoiroot, home/, config template, .gitignore
+  setup/                # init: .chezmoiroot, home/, config template, .gitignore, .editorconfig, .shellcheckrc
   state/                # JSON state file (atomic write via rename)
   ignore/               # .recipeignore parsing (Go template + TOML data)
 examples/               # reference recipe implementations
@@ -98,7 +98,7 @@ Runtime:
 ## CLI commands
 
 ```
-chezmoi-recipes init                  # set up .chezmoiroot, home/, config template, .gitignore
+chezmoi-recipes init                  # set up .chezmoiroot, home/, config template, .gitignore, .editorconfig, .shellcheckrc, README
 chezmoi-recipes overlay [recipe...]   # rebuild compiled-home/ from home/ + recipes/ (called by read-source-state.pre hook)
 chezmoi-recipes overlay --dry-run     # preview without writing
 chezmoi-recipes list [--json]         # list available recipes
