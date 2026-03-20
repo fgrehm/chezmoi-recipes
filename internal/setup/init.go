@@ -86,10 +86,16 @@ func RunInit(repoRoot, recipesDir string, force bool) (*InitResult, error) {
 }
 
 // writeIfMissing writes content to path if the file does not already exist.
+// Returns an error if the path exists but is not a regular file.
 func writeIfMissing(path, content string) error {
-	if _, err := os.Stat(path); err == nil {
-		return nil // already exists
-	} else if !errors.Is(err, os.ErrNotExist) {
+	fi, err := os.Stat(path)
+	if err == nil {
+		if !fi.Mode().IsRegular() {
+			return fmt.Errorf("%s exists but is not a regular file", path)
+		}
+		return nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 	return os.WriteFile(path, []byte(content), 0o644)
