@@ -390,7 +390,7 @@ The `_install()` wrapper pattern (see "Resilient install scripts" above) is corr
 **Do not use the wrapper for critical dependencies.** If oh-my-zsh fails to install, zsh is completely broken because `dot_zshrc` sources `$ZSH/oh-my-zsh.sh` unconditionally. Core infrastructure scripts should fail hard so the user knows immediately:
 
 ```bash
-#!/bin/env bash
+#!/usr/bin/env bash
 # Critical dependency: hard fail on error
 set -euo pipefail
 source "$CHEZMOI_SOURCE_DIR/scripts/ui.bash"

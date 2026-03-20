@@ -326,6 +326,56 @@ func TestRunInit_CreatesReadme(t *testing.T) {
 	}
 }
 
+func TestRunInit_DoesNotOverwriteExistingEditorConfig(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	existing := "root = true\n"
+	if err := os.WriteFile(filepath.Join(repoRoot, ".editorconfig"), []byte(existing), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, ".editorconfig"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != existing {
+		t.Error("existing .editorconfig should not be overwritten")
+	}
+}
+
+func TestRunInit_DoesNotOverwriteExistingShellcheckRC(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	existing := "disable=SC1234\n"
+	if err := os.WriteFile(filepath.Join(repoRoot, ".shellcheckrc"), []byte(existing), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, ".shellcheckrc"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != existing {
+		t.Error("existing .shellcheckrc should not be overwritten")
+	}
+}
+
 func TestRunInit_DoesNotOverwriteExistingReadme(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
