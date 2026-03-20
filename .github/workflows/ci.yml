@@ -27,7 +27,7 @@ jobs:
           git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats-core
           sudo /tmp/bats-core/install.sh /usr/local
       - name: Install chezmoi
-        run: sh -c "$(curl -fsSL https://get.chezmoi.io)" -- -b /usr/local/bin
+        run: sh -c "$(curl -fsSL https://get.chezmoi.io)" -- -b "$HOME/.local/bin" && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: make test-e2e
         env:
           CHEZMOI_RECIPES_E2E: "1"
