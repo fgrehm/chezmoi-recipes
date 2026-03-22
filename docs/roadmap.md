@@ -54,6 +54,12 @@ Custom linters runnable via `make check` or `chezmoi-recipes lint`. Examples:
 
 Consider whether this belongs in chezmoi-recipes itself or in the dotfiles repo.
 
+## `chezmoi docker` testing guide
+
+Document how to use chezmoi's built-in `chezmoi docker run` / `chezmoi docker exec` for smoke-testing dotfiles in a clean container. Needs investigation into how to make `chezmoi-recipes` available inside the container (bind-mount the binary, install inside, etc.). Could be a simpler alternative to devcontainers for quick validation.
+
+See: https://www.chezmoi.io/reference/commands/docker/
+
 ## `.chezmoiexternal` support in recipes
 
 Allow recipes to include `.chezmoiexternal.toml` fragments that get merged into a single `.chezmoiexternal.toml` in `compiled-home/`, similar to how `.chezmoiignore` is merged today.
