@@ -14,3 +14,20 @@ jobs:
       - run: go vet ./...
       - run: go test -race ./...
       - run: go build ./cmd/chezmoi-recipes
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install bats
+        run: |
+          git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats-core
+          sudo /tmp/bats-core/install.sh /usr/local
+      - name: Install chezmoi
+        run: sh -c "$(curl -fsSL https://get.chezmoi.io)" -- -b "$HOME/.local/bin" && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: make test-e2e
+        env:
+          CHEZMOI_RECIPES_E2E: "1"

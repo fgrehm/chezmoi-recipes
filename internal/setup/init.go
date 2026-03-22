@@ -48,7 +48,7 @@ func RunInit(repoRoot, recipesDir string, force bool) (*InitResult, error) {
 	if err != nil {
 		absRecDir = recipesDir
 	}
-	skipped, err := WriteChezmoiConfig(homeDir, absRecDir, force)
+	skipped, err := WriteChezmoiConfig(homeDir, repoRoot, absRecDir, force)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +56,21 @@ func RunInit(repoRoot, recipesDir string, force bool) (*InitResult, error) {
 	// Create recipes/ directory.
 	if err := os.MkdirAll(recipesDir, 0o755); err != nil {
 		return nil, fmt.Errorf("creating recipes directory: %w", err)
+	}
+
+	// Write .editorconfig (2-space indent for shell scripts).
+	if err := writeIfMissing(filepath.Join(repoRoot, ".editorconfig"), editorConfig); err != nil {
+		return nil, fmt.Errorf("writing .editorconfig: %w", err)
+	}
+
+	// Write .shellcheckrc (suppress chezmoi template noise).
+	if err := writeIfMissing(filepath.Join(repoRoot, ".shellcheckrc"), shellcheckRC); err != nil {
+		return nil, fmt.Errorf("writing .shellcheckrc: %w", err)
+	}
+
+	// Write README.md if none exists.
+	if err := writeIfMissing(filepath.Join(repoRoot, "README.md"), readmeTemplate); err != nil {
+		return nil, fmt.Errorf("writing README.md: %w", err)
 	}
 
 	// Run initial overlay: copy home/ -> compiled-home/ so chezmoi init finds
@@ -69,6 +84,65 @@ func RunInit(repoRoot, recipesDir string, force bool) (*InitResult, error) {
 
 	return &InitResult{ConfigSkipped: skipped}, nil
 }
+
+// writeIfMissing writes content to path if the file does not already exist.
+// Uses Lstat to detect symlinks without following them. Returns an error if
+// the path exists but is not a regular file (e.g. a directory or symlink).
+func writeIfMissing(path, content string) error {
+	fi, err := os.Lstat(path)
+	if err == nil {
+		if !fi.Mode().IsRegular() {
+			return fmt.Errorf("%s exists but is not a regular file", path)
+		}
+		return nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return os.WriteFile(path, []byte(content), 0o644)
+}
+
+const editorConfig = `root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+[*.{sh,bash,zsh}]
+indent_style = space
+indent_size = 2
+
+[*.sh.tmpl]
+indent_style = space
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+`
+
+const shellcheckRC = `# Sourced files are checked independently; don't warn about missing includes.
+disable=SC1091
+# Allow chezmoi template directives in shebang position.
+disable=SC1128
+# chezmoi template conditionals look like constant comparisons.
+disable=SC2050
+# Functions defined inside _install() wrappers appear unreachable.
+disable=SC2317
+`
+
+const readmeTemplate = `# dotfiles
+
+Managed with [chezmoi](https://www.chezmoi.io/) and [chezmoi-recipes](https://github.com/fgrehm/chezmoi-recipes).
+
+## Quick start
+
+` + "```bash" + `
+# Install chezmoi and chezmoi-recipes, then apply
+chezmoi init --source .
+chezmoi apply
+` + "```" + `
+`
 
 // ensureGitignoreEntry appends entry to .gitignore if not already present.
 func ensureGitignoreEntry(repoRoot, entry string) error {
@@ -99,8 +173,9 @@ func ensureGitignoreEntry(repoRoot, entry string) error {
 
 // chezmoiConfigTemplate is a chezmoi .chezmoi.toml.tmpl that captures user
 // data at `chezmoi init` time via promptStringOnce and auto-detects the
-// environment using chezmoi template functions. The recipes-dir path is
-// injected by chezmoi-recipes init.
+// environment using chezmoi template functions. The recipes-dir relative path
+// is injected by chezmoi-recipes init; {{ .chezmoi.workingTree }} resolves it
+// portably so the config works when cloned to a different location.
 //
 // Guard hooks block commands that would write to compiled-home/ (a generated
 // directory). Users should edit files in home/ or recipes/ instead.
@@ -112,9 +187,11 @@ const chezmoiConfigTemplate = `{{- /* Auto-detect environment */ -}}
 {{-   $hasNvidiaGPU = output "lspci" | lower | contains "nvidia" -}}
 {{- end -}}
 
+sourceDir = "{{ .chezmoi.workingTree }}"
+
 [hooks.read-source-state.pre]
     command = "chezmoi-recipes"
-    args = ["overlay", "--quiet", "--recipes-dir", %[1]q]
+    args = ["overlay", "--recipes-dir", "{{ .chezmoi.workingTree }}/%s"]
 
 [hooks.add.pre]
     command = "sh"
@@ -148,8 +225,11 @@ const chezmoiConfigTemplate = `{{- /* Auto-detect environment */ -}}
     command = "sh"
     args = ["-c", "echo 'Error: use home/ or recipes/ instead of chezmoi destroy (compiled-home/ is generated)' >&2; exit 1"]
 
+[diff]
+    pager = "cat"
+
 [data]
-    recipesDir = %[1]q
+    recipesDir = "{{ .chezmoi.workingTree }}/%s"
     name = {{ promptStringOnce . "name" "Full name" | quote }}
     email = {{ promptStringOnce . "email" "Email" | quote }}
     isContainer = {{ $isContainer }}
@@ -161,17 +241,30 @@ const chezmoiConfigTemplate = `{{- /* Auto-detect environment */ -}}
 // chezmoi processes this template at `chezmoi init` time, prompting for
 // user data and auto-detecting the environment. When force is false and the
 // file already exists, the write is skipped and (true, nil) is returned.
-func WriteChezmoiConfig(homeDir, recipesDir string, force bool) (skipped bool, err error) {
+//
+// repoRoot is the dotfiles repo root. recipesDir is the absolute path to the
+// recipes directory. The relative path from repoRoot to recipesDir is embedded
+// in the template as {{ .chezmoi.workingTree }}/<relPath>, so the generated
+// config works when the repo is cloned to a different location.
+func WriteChezmoiConfig(homeDir, repoRoot, recipesDir string, force bool) (skipped bool, err error) {
 	dest := filepath.Join(homeDir, ".chezmoi.toml.tmpl")
-	if !force {
-		if _, err := os.Stat(dest); err == nil {
-			return true, nil
-		} else if !errors.Is(err, os.ErrNotExist) {
-			return false, fmt.Errorf("checking .chezmoi.toml.tmpl: %w", err)
+	if fi, err := os.Lstat(dest); err == nil {
+		if !fi.Mode().IsRegular() {
+			return false, fmt.Errorf(".chezmoi.toml.tmpl exists but is not a regular file")
 		}
+		if !force {
+			return true, nil
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return false, fmt.Errorf("checking .chezmoi.toml.tmpl: %w", err)
 	}
 
-	content := fmt.Sprintf(chezmoiConfigTemplate, recipesDir)
+	relRecipesDir, err := filepath.Rel(repoRoot, recipesDir)
+	if err != nil {
+		return false, fmt.Errorf("computing relative recipes path: %w", err)
+	}
+
+	content := fmt.Sprintf(chezmoiConfigTemplate, relRecipesDir, relRecipesDir)
 	if err := os.WriteFile(dest, []byte(content), 0o644); err != nil {
 		return false, fmt.Errorf("writing .chezmoi.toml.tmpl: %w", err)
 	}

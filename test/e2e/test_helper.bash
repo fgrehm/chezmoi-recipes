@@ -83,6 +83,11 @@ run_manual_overlay() {
 # Call this in setup() so chezmoi writes to temp dirs.
 isolate_home() {
   TEST_HOME="$(mktemp -d)"
+
+  # Preserve Go module cache outside TEST_HOME so read-only module files
+  # don't block cleanup. Fall back to the real home if GOMODCACHE is unset.
+  export GOMODCACHE="${GOMODCACHE:-$(go env GOMODCACHE)}"
+
   export HOME="$TEST_HOME"
   export XDG_CONFIG_HOME="$TEST_HOME/.config"
   export XDG_DATA_HOME="$TEST_HOME/.local/share"

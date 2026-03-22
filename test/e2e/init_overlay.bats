@@ -84,6 +84,77 @@ TMPL
   [[ "$output" == *"my bashrc"* ]]
 }
 
+@test "chezmoi-recipes init generates working config for chezmoi apply" {
+  # This test exercises the REAL generated config template end-to-end:
+  #   1. chezmoi-recipes init generates .chezmoi.toml.tmpl with
+  #      {{ .chezmoi.workingTree }}/recipes paths, sourceDir, hooks
+  #   2. chezmoi init processes the template (expands workingTree, prompts)
+  #   3. chezmoi apply fires read-source-state.pre hook -> overlay runs
+  #   4. chezmoi deploys files from compiled-home/ to ~/
+
+  chezmoi-recipes init --recipes-dir "$DOTFILES/recipes"
+
+  # Verify the generated template uses portable paths (not absolute)
+  run cat "$DOTFILES/home/.chezmoi.toml.tmpl"
+  [[ "$output" == *'{{ .chezmoi.workingTree }}/recipes'* ]]
+  [[ "$output" != *"$DOTFILES"* ]]
+
+  # Add a recipe and a home file
+  mkdir -p "$DOTFILES/recipes/git/chezmoi"
+  printf '# git recipe\n' > "$DOTFILES/recipes/git/README.md"
+  printf '[user]\n    name = test\n' > "$DOTFILES/recipes/git/chezmoi/dot_gitconfig"
+  printf '# my bashrc\n' > "$DOTFILES/home/dot_bashrc"
+
+  # chezmoi init with the real template (non-interactive via --promptString)
+  chezmoi init --no-tty --source "$DOTFILES" \
+    --promptString "Full name=Test User" \
+    --promptString "Email=test@example.com"
+
+  # Verify rendered config has expanded {{ .chezmoi.workingTree }}
+  local config="$XDG_CONFIG_HOME/chezmoi/chezmoi.toml"
+  [ -f "$config" ]
+  run cat "$config"
+
+  # sourceDir should point to the dotfiles repo
+  [[ "$output" == *"sourceDir"* ]]
+  [[ "$output" == *"$DOTFILES"* ]]
+
+  # recipesDir should be the expanded absolute path (not a template)
+  [[ "$output" == *"$DOTFILES/recipes"* ]]
+
+  # Overlay hook should be configured
+  [[ "$output" == *"chezmoi-recipes"* ]]
+  [[ "$output" == *"overlay"* ]]
+
+  # chezmoi apply: the hook fires overlay automatically, then deploys
+  run chezmoi apply --no-tty --source "$DOTFILES"
+  [ "$status" -eq 0 ]
+
+  # Target files should exist in HOME
+  [ -f "$HOME/.bashrc" ]
+  [ -f "$HOME/.gitconfig" ]
+
+  run cat "$HOME/.bashrc"
+  [[ "$output" == *"my bashrc"* ]]
+
+  run cat "$HOME/.gitconfig"
+  [[ "$output" == *"name = test"* ]]
+}
+
+@test "chezmoi-recipes init creates .editorconfig .shellcheckrc and README" {
+  chezmoi-recipes init --recipes-dir "$DOTFILES/recipes"
+
+  [ -f "$DOTFILES/.editorconfig" ]
+  [ -f "$DOTFILES/.shellcheckrc" ]
+  [ -f "$DOTFILES/README.md" ]
+
+  run cat "$DOTFILES/.editorconfig"
+  [[ "$output" == *"indent_size = 2"* ]]
+
+  run cat "$DOTFILES/.shellcheckrc"
+  [[ "$output" == *"SC1091"* ]]
+}
+
 @test "chezmoi-recipes overlay is idempotent" {
   mkdir -p "$DOTFILES/recipes"
   chezmoi-recipes init --recipes-dir "$DOTFILES/recipes"

@@ -361,6 +361,53 @@ Use chezmoi template conditionals:
 
 To skip an entire recipe by environment, use `.recipeignore` instead.
 
+## Recipe ordering and dependencies
+
+### The shell/base recipe comes first
+
+Recipes that drop files in `dot_shellrc.d/` depend on a shell recipe that sets up the loader (`dot_shellrc` sourcing `~/.shellrc.d/*.sh`). Without the shell recipe, those fragments are never sourced.
+
+If you have a shell/base recipe, make sure it exists before creating recipes that ship shell fragments. chezmoi-recipes does not enforce ordering between recipes, but the shell recipe is foundational. Document this in your repo's README.
+
+### `lookPath` evaluates before scripts run
+
+chezmoi template functions like `lookPath` evaluate at template render time, before any install scripts run. This means `{{ if lookPath "diffnav" }}` won't detect a tool installed by a script in the same `chezmoi apply`.
+
+Options for conditional config based on tool presence:
+
+1. **Runtime check in a shellrc.d fragment.** Instead of a template conditional in a config file, use a shell fragment that runs `git config --global ...` at shell init time. The tool will be present by then.
+
+2. **Always include the config and accept the no-op.** Most tools ignore config for features they don't use. A git pager setting for a tool that isn't installed just falls back to the default.
+
+3. **Defer to a second apply.** Run `chezmoi apply` once to install tools, then again to pick up the new `lookPath` results. This is manual but works for rare cases.
+
+The first option (runtime shell check) is the most reliable pattern for cross-tool integration.
+
+### Critical vs optional install scripts
+
+The `_install()` wrapper pattern (see "Resilient install scripts" above) is correct for optional tools like ripgrep or bat. If they fail to install, the user can still work.
+
+**Do not use the wrapper for critical dependencies.** If oh-my-zsh fails to install, zsh is completely broken because `dot_zshrc` sources `$ZSH/oh-my-zsh.sh` unconditionally. Core infrastructure scripts should fail hard so the user knows immediately:
+
+```bash
+#!/usr/bin/env bash
+# Critical dependency: hard fail on error
+set -euo pipefail
+source "$CHEZMOI_SOURCE_DIR/scripts/ui.bash"
+
+if command -v zsh &>/dev/null && [[ -d "$HOME/.oh-my-zsh" ]]; then
+  log_skip "oh-my-zsh already installed"
+  exit 0
+fi
+
+log_info "Installing oh-my-zsh..."
+# No _install() wrapper: if this fails, chezmoi apply stops.
+# That's intentional: zsh config depends on oh-my-zsh.
+wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh -s -- --unattended
+```
+
+Use this pattern when other files in the recipe (or other recipes) depend on the tool being present. The graceful `_install()` pattern is for tools where failure is inconvenient but not breaking.
+
 ## Common pitfalls
 
 ### `chezmoi cd` goes to the repo root, not `recipes/`

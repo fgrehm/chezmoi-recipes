@@ -10,6 +10,7 @@ import (
 func TestRunInit_CreatesChezmoiroot(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -30,6 +31,7 @@ func TestRunInit_CreatesChezmoiroot(t *testing.T) {
 func TestRunInit_CreatesHomeDir(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -50,6 +52,7 @@ func TestRunInit_CreatesHomeDir(t *testing.T) {
 func TestRunInit_WritesConfigToHome(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -67,14 +70,15 @@ func TestRunInit_WritesConfigToHome(t *testing.T) {
 	if !strings.Contains(content, `[hooks.read-source-state.pre]`) {
 		t.Error("config should have read-source-state.pre hook")
 	}
-	if !strings.Contains(content, recipesDir) {
-		t.Errorf("config should reference recipes dir %q", recipesDir)
+	if !strings.Contains(content, `{{ .chezmoi.workingTree }}/recipes`) {
+		t.Error("config should use {{ .chezmoi.workingTree }}/recipes for portable paths")
 	}
 }
 
 func TestRunInit_AddsCompiledHomeToGitignore(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -105,6 +109,7 @@ func TestRunInit_AddsCompiledHomeToGitignore(t *testing.T) {
 func TestRunInit_GitignoreIdempotent(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -129,6 +134,7 @@ func TestRunInit_GitignoreIdempotent(t *testing.T) {
 func TestRunInit_ConfigTemplateNoApplyPre(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -146,14 +152,15 @@ func TestRunInit_ConfigTemplateNoApplyPre(t *testing.T) {
 	if strings.Contains(content, `[hooks.apply.pre]`) {
 		t.Error("config should NOT have [hooks.apply.pre] section")
 	}
-	if strings.Contains(content, "sourceDir") {
-		t.Error("config should NOT set sourceDir")
+	if !strings.Contains(content, "sourceDir") {
+		t.Error("config should set sourceDir")
 	}
 }
 
 func TestRunInit_ConfigTemplateHasGuardHooks(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -180,6 +187,7 @@ func TestRunInit_ConfigTemplateHasGuardHooks(t *testing.T) {
 func TestRunInit_CompiledHomePopulated(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -197,6 +205,7 @@ func TestRunInit_CompiledHomePopulated(t *testing.T) {
 func TestRunInit_CreatesRecipesDir(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -217,6 +226,7 @@ func TestRunInit_CreatesRecipesDir(t *testing.T) {
 func TestRunInit_SkipExistingConfig(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -237,6 +247,7 @@ func TestRunInit_SkipExistingConfig(t *testing.T) {
 func TestRunInit_ForceOverwriteConfig(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
@@ -268,14 +279,155 @@ func TestRunInit_ForceOverwriteConfig(t *testing.T) {
 	}
 }
 
+func TestRunInit_CreatesEditorConfig(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, ".editorconfig"))
+	if err != nil {
+		t.Fatalf(".editorconfig not found: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "indent_size = 2") {
+		t.Error(".editorconfig should set indent_size = 2 for shell files")
+	}
+}
+
+func TestRunInit_CreatesShellcheckRC(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, ".shellcheckrc"))
+	if err != nil {
+		t.Fatalf(".shellcheckrc not found: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "SC1091") {
+		t.Error(".shellcheckrc should disable SC1091")
+	}
+}
+
+func TestRunInit_CreatesReadme(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(repoRoot, "README.md")); err != nil {
+		t.Error("README.md should be created by init")
+	}
+}
+
+func TestRunInit_DoesNotOverwriteExistingEditorConfig(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	existing := "root = true\n"
+	if err := os.WriteFile(filepath.Join(repoRoot, ".editorconfig"), []byte(existing), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, ".editorconfig"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != existing {
+		t.Error("existing .editorconfig should not be overwritten")
+	}
+}
+
+func TestRunInit_DoesNotOverwriteExistingShellcheckRC(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	existing := "disable=SC1234\n"
+	if err := os.WriteFile(filepath.Join(repoRoot, ".shellcheckrc"), []byte(existing), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, ".shellcheckrc"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != existing {
+		t.Error("existing .shellcheckrc should not be overwritten")
+	}
+}
+
+func TestRunInit_DoesNotOverwriteExistingReadme(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	existing := "# My custom readme\n"
+	if err := os.WriteFile(filepath.Join(repoRoot, "README.md"), []byte(existing), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != existing {
+		t.Error("existing README.md should not be overwritten")
+	}
+}
+
 func TestWriteChezmoiConfig(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	homeDir := t.TempDir()
+	repoRoot := "/home/user/dotfiles"
 	recipesDir := "/home/user/dotfiles/recipes"
 
-	skipped, err := WriteChezmoiConfig(homeDir, recipesDir, false)
+	skipped, err := WriteChezmoiConfig(homeDir, repoRoot, recipesDir, false)
 	if err != nil {
 		t.Fatalf("WriteChezmoiConfig() error = %v", err)
 	}
@@ -290,8 +442,8 @@ func TestWriteChezmoiConfig(t *testing.T) {
 
 	content := string(data)
 
-	if strings.Contains(content, "sourceDir") {
-		t.Error("config should NOT set sourceDir")
+	if !strings.Contains(content, "sourceDir") {
+		t.Error("config should set sourceDir")
 	}
 	if strings.Contains(content, `[hooks.apply.pre]`) {
 		t.Error("config should NOT have [hooks.apply.pre] section")
@@ -299,8 +451,11 @@ func TestWriteChezmoiConfig(t *testing.T) {
 	if !strings.Contains(content, `[hooks.read-source-state.pre]`) {
 		t.Error("missing [hooks.read-source-state.pre] section")
 	}
-	if !strings.Contains(content, recipesDir) {
-		t.Errorf("missing recipes dir %q in template", recipesDir)
+	if !strings.Contains(content, `{{ .chezmoi.workingTree }}/recipes`) {
+		t.Error("config should use {{ .chezmoi.workingTree }}/recipes, not absolute path")
+	}
+	if strings.Contains(content, repoRoot) {
+		t.Error("config should NOT contain absolute repo root path")
 	}
 	if !strings.Contains(content, `[data]`) {
 		t.Error("missing [data] section")
@@ -316,14 +471,15 @@ func TestWriteChezmoiConfig(t *testing.T) {
 func TestWriteChezmoiConfig_SkipExisting(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	homeDir := t.TempDir()
 
-	if _, err := WriteChezmoiConfig(homeDir, "/old/recipes", false); err != nil {
+	if _, err := WriteChezmoiConfig(homeDir, "/old", "/old/recipes", false); err != nil {
 		t.Fatal(err)
 	}
 
-	skipped, err := WriteChezmoiConfig(homeDir, "/new/recipes", false)
+	skipped, err := WriteChezmoiConfig(homeDir, "/new", "/new/recipes", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -335,14 +491,15 @@ func TestWriteChezmoiConfig_SkipExisting(t *testing.T) {
 func TestWriteChezmoiConfig_ForceOverwrite(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	homeDir := t.TempDir()
 
-	if _, err := WriteChezmoiConfig(homeDir, "/old/recipes", false); err != nil {
+	if _, err := WriteChezmoiConfig(homeDir, "/old", "/old/recipes", false); err != nil {
 		t.Fatal(err)
 	}
 
-	skipped, err := WriteChezmoiConfig(homeDir, "/new/recipes", true)
+	skipped, err := WriteChezmoiConfig(homeDir, "/new", "/new/recipes", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -356,10 +513,9 @@ func TestWriteChezmoiConfig_ForceOverwrite(t *testing.T) {
 	}
 
 	content := string(data)
-	if strings.Contains(content, "/old/recipes") {
-		t.Error("old recipes dir should be overwritten")
-	}
-	if !strings.Contains(content, "/new/recipes") {
-		t.Errorf("expected new recipes dir, got:\n%s", content)
+	// Both old and new use relative path "recipes", so content should use
+	// {{ .chezmoi.workingTree }}/recipes (not absolute paths).
+	if !strings.Contains(content, `{{ .chezmoi.workingTree }}/recipes`) {
+		t.Error("config should use {{ .chezmoi.workingTree }}/recipes")
 	}
 }

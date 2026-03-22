@@ -19,7 +19,7 @@ internal/
   paths/                # path helpers (CompiledHomeDir, HomeDir, XDG state dir)
   recipe/               # recipe discovery and loading
   scaffold/             # new recipe skeleton generation
-  setup/                # init: .chezmoiroot, home/, config template, .gitignore
+  setup/                # init: .chezmoiroot, home/, config template, .gitignore, .editorconfig, .shellcheckrc, README
   state/                # JSON state file, atomic write via rename
   ignore/               # .recipeignore: Go template parsed against chezmoi TOML data
 examples/               # reference recipe implementations
