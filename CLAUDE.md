@@ -95,6 +95,17 @@ examples/               # reference recipe implementations
 Runtime:
 - State: `$XDG_DATA_HOME/chezmoi-recipes/` (default `~/.local/share/chezmoi-recipes/`)
 
+## Releasing
+
+1. Update `CHANGELOG.md` with the new version and date.
+2. Commit: `chore: add CHANGELOG for vX.Y.Z`
+3. Tag and push:
+   ```bash
+   git tag vX.Y.Z
+   git push origin main --tags
+   ```
+4. The `.github/workflows/release.yml` workflow runs goreleaser, which builds linux/amd64+arm64 binaries and publishes a GitHub release with checksums.
+
 ## CLI commands
 
 ```
