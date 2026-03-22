@@ -248,12 +248,15 @@ sourceDir = "{{ .chezmoi.workingTree }}"
 // config works when the repo is cloned to a different location.
 func WriteChezmoiConfig(homeDir, repoRoot, recipesDir string, force bool) (skipped bool, err error) {
 	dest := filepath.Join(homeDir, ".chezmoi.toml.tmpl")
-	if !force {
-		if _, err := os.Lstat(dest); err == nil {
-			return true, nil
-		} else if !errors.Is(err, os.ErrNotExist) {
-			return false, fmt.Errorf("checking .chezmoi.toml.tmpl: %w", err)
+	if fi, err := os.Lstat(dest); err == nil {
+		if !fi.Mode().IsRegular() {
+			return false, fmt.Errorf(".chezmoi.toml.tmpl exists but is not a regular file")
 		}
+		if !force {
+			return true, nil
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return false, fmt.Errorf("checking .chezmoi.toml.tmpl: %w", err)
 	}
 
 	relRecipesDir, err := filepath.Rel(repoRoot, recipesDir)
