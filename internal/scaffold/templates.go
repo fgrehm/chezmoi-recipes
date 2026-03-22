@@ -23,7 +23,7 @@ TODO: One sentence describing what this recipe sets up.
 | ` + "`.isContainer`" + ` | true in Docker/devcontainers | auto-detected |
 `
 
-const installScriptTmpl = `#!/bin/env bash
+const installScriptTmpl = `#!/usr/bin/env bash
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # vim: ft=bash.gotmpl
 #

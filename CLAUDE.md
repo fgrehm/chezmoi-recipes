@@ -83,7 +83,7 @@ internal/
   paths/                # path helpers (CompiledHomeDir, HomeDir, XDG state dir)
   recipe/               # discover and load recipe directories
   scaffold/             # generate new recipe skeletons
-  setup/                # init: .chezmoiroot, home/, config template, .gitignore, .editorconfig, .shellcheckrc
+  setup/                # init: .chezmoiroot, home/, config template, .gitignore, .editorconfig, .shellcheckrc, README
   state/                # JSON state file (atomic write via rename)
   ignore/               # .recipeignore parsing (Go template + TOML data)
 examples/               # reference recipe implementations

@@ -86,9 +86,10 @@ func RunInit(repoRoot, recipesDir string, force bool) (*InitResult, error) {
 }
 
 // writeIfMissing writes content to path if the file does not already exist.
-// Returns an error if the path exists but is not a regular file.
+// Uses Lstat to detect symlinks without following them. Returns an error if
+// the path exists but is not a regular file (e.g. a directory or symlink).
 func writeIfMissing(path, content string) error {
-	fi, err := os.Stat(path)
+	fi, err := os.Lstat(path)
 	if err == nil {
 		if !fi.Mode().IsRegular() {
 			return fmt.Errorf("%s exists but is not a regular file", path)
@@ -248,7 +249,7 @@ sourceDir = "{{ .chezmoi.workingTree }}"
 func WriteChezmoiConfig(homeDir, repoRoot, recipesDir string, force bool) (skipped bool, err error) {
 	dest := filepath.Join(homeDir, ".chezmoi.toml.tmpl")
 	if !force {
-		if _, err := os.Stat(dest); err == nil {
+		if _, err := os.Lstat(dest); err == nil {
 			return true, nil
 		} else if !errors.Is(err, os.ErrNotExist) {
 			return false, fmt.Errorf("checking .chezmoi.toml.tmpl: %w", err)
