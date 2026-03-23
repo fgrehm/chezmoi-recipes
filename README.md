@@ -125,29 +125,33 @@ See `docs/chezmoi-integration.md` for the full integration design.
 
 **Linux only** (macOS and Windows if enough interest).
 
-**Install script** (recommended): installs chezmoi and chezmoi-recipes, then optionally clones and applies a dotfiles repo.
+**Install script** (recommended): installs chezmoi and chezmoi-recipes, then forwards any remaining arguments to chezmoi (same pattern as [chezmoi's install script](https://www.chezmoi.io/install/#one-line-package-install)).
 
 ```bash
 # Install binaries only
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)"
 
-# Install and apply from GitHub (assumes repo named "dotfiles")
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- username
+# Install and init dotfiles from GitHub
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- \
+  init --apply username
 
-# Install and apply from an explicit repo
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- username/repo
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- https://github.com/username/repo
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- git@github.com:username/repo
+# With prompt values (non-interactive)
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- \
+  init --apply username \
+    --promptString "Full name=Fabio Rehm" \
+    --promptString "Email address=me@example.com"
 
-# Custom bin directory (-b, like chezmoi's install script)
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- -b ~/bin username
+# Explicit repo URL
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- \
+  init --apply git@github.com:username/repo
 
-# Pin versions (-t for chezmoi-recipes, --chezmoi-tag for chezmoi)
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- -t v0.2.0 --chezmoi-tag v2.61.0 username
-
-# Custom dotfiles location
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- --dotfiles-dir ~/projects/dotfiles username
+# Custom bin directory (-b) and pinned versions (-t, --chezmoi-tag)
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- \
+  -b ~/bin -t v0.3.0 --chezmoi-tag v2.70.0 \
+  init --apply username
 ```
+
+Installer options (`-b`, `-t`, `--chezmoi-tag`) must come before the chezmoi arguments. Everything from `init` onwards is passed directly to `chezmoi`.
 
 **Go install:**
 ```bash

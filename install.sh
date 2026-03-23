@@ -1,31 +1,33 @@
 #!/bin/sh
-# Install chezmoi and chezmoi-recipes, clone a dotfiles repo, and apply it.
+# Install chezmoi and chezmoi-recipes, then optionally run chezmoi.
 #
 # Usage:
 #   # Install binaries only
 #   sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)"
 #
-#   # Install and apply from GitHub (assumes repo named "dotfiles")
-#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- username
+#   # Install and init dotfiles
+#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- \
+#     init --apply username
 #
-#   # Install and apply from explicit repo
-#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- username/repo
-#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- https://github.com/username/repo
-#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- git@github.com:username/repo
+#   # With prompt values and explicit repo
+#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- \
+#     --bin-dir ~/.local/bin \
+#     init --apply username/repo \
+#       --promptString "Full name=Fabio Rehm" \
+#       --promptString "Email address=me@example.com"
 #
-# Options:
+# Options (must come before chezmoi args):
 #   -b, --bin-dir DIR        Where to install binaries (default: ~/.local/bin)
-#   -t, --tag TAG            chezmoi-recipes release tag to install (default: latest)
-#       --chezmoi-tag TAG    chezmoi release tag to install (default: latest)
-#       --dotfiles-dir DIR   Where to clone the repo (default: ~/dotfiles)
+#   -t, --tag TAG            chezmoi-recipes release tag (default: latest)
+#       --chezmoi-tag TAG    chezmoi release tag (default: latest)
+#
+# Any arguments after the installer options are forwarded to chezmoi.
 
 set -eu
 
 BIN_DIR="${BIN_DIR:-$HOME/.local/bin}"
-DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
 TAG="${TAG:-latest}"
 CHEZMOI_TAG="${CHEZMOI_TAG:-latest}"
-REPO=""
 
 _log() { printf '\033[1;34m==> %s\033[0m\n' "$*"; }
 _die() { printf '\033[1;31merror: %s\033[0m\n' "$*" >&2; exit 1; }
@@ -35,9 +37,8 @@ while [ $# -gt 0 ]; do
     -b|--bin-dir)      BIN_DIR="$2";      shift 2 ;;
     -t|--tag)          TAG="$2";          shift 2 ;;
     --chezmoi-tag)     CHEZMOI_TAG="$2";  shift 2 ;;
-    --dotfiles-dir)    DOTFILES_DIR="$2"; shift 2 ;;
-    --*) _die "unknown option: $1" ;;
-    *)   REPO="$1"; shift ;;
+    --)                shift; break ;;
+    *)                 break ;;
   esac
 done
 
@@ -73,35 +74,12 @@ else
   curl -fsSL "$URL" | tar xz -C "$BIN_DIR"
 fi
 
-# No repo given: binaries only
-if [ -z "$REPO" ]; then
+# No remaining args: binaries-only install
+if [ $# -eq 0 ]; then
   printf '\nchezmoi and chezmoi-recipes installed to %s\n' "$BIN_DIR"
-  printf 'Next: chezmoi-recipes init --recipes-dir <path/to/recipes>\n'
   exit 0
 fi
 
-# Normalize repo to full URL
-case "$REPO" in
-  https://*|http://*|git@*) REPO_URL="$REPO" ;;
-  */*)                      REPO_URL="https://github.com/$REPO" ;;
-  *)                        REPO_URL="https://github.com/$REPO/dotfiles" ;;
-esac
-
-# Clone dotfiles repo (skip if already present)
-if [ -d "$DOTFILES_DIR/.git" ]; then
-  _log "Using existing dotfiles at $DOTFILES_DIR"
-else
-  _log "Cloning $REPO_URL"
-  git clone "$REPO_URL" "$DOTFILES_DIR"
-fi
-
-_log "Initializing chezmoi-recipes"
-chezmoi-recipes init --recipes-dir "$DOTFILES_DIR/recipes"
-
-_log "Configuring chezmoi"
-chezmoi init --source "$DOTFILES_DIR"
-
-_log "Applying dotfiles"
-chezmoi apply
-
-printf '\n\033[1;32mDone.\033[0m Open a new shell to pick up the changes.\n'
+# Forward remaining args to chezmoi (e.g., init --apply username ...)
+_log "Running chezmoi $*"
+exec chezmoi "$@"
