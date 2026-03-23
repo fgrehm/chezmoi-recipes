@@ -8,6 +8,14 @@ INSTALL_SH="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)/install.sh"
 setup() {
   [ "$(uname -s)" = "Linux" ] || skip "install.sh only supports Linux"
 
+  # Isolate HOME so the install script cannot read or write the real
+  # user's git config, XDG dirs, or ~/.local/bin.
+  TEST_HOME="$(mktemp -d)"
+  export HOME="$TEST_HOME"
+  export XDG_CONFIG_HOME="$TEST_HOME/.config"
+  export XDG_DATA_HOME="$TEST_HOME/.local/share"
+  mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME"
+
   MOCK_BIN="$(mktemp -d)"
 
   # Mock chezmoi: prints args so tests can verify forwarding.
@@ -39,6 +47,7 @@ MOCK
 
 teardown() {
   rm -rf "$MOCK_BIN"
+  rm -rf "$TEST_HOME"
 }
 
 @test "no args: binaries-only install" {
