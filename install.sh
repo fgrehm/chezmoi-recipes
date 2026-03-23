@@ -1,27 +1,16 @@
 #!/bin/sh
-# Install chezmoi and chezmoi-recipes, then optionally run chezmoi.
+# Install chezmoi and chezmoi-recipes binaries.
+#
+# For full dotfiles setup (clone, overlay, init, apply), use the install.sh
+# generated in your dotfiles repo by chezmoi-recipes init.
 #
 # Usage:
-#   # Install binaries only
 #   sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)"
 #
-#   # Install and init dotfiles
-#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- \
-#     init --apply username
-#
-#   # With prompt values and explicit repo
-#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)" -- \
-#     --bin-dir ~/.local/bin \
-#     init --apply username/repo \
-#       --promptString "Full name=Fabio Rehm" \
-#       --promptString "Email address=me@example.com"
-#
-# Options (must come before chezmoi args):
+# Options:
 #   -b, --bin-dir DIR        Where to install binaries (default: ~/.local/bin)
 #   -t, --tag TAG            chezmoi-recipes release tag (default: latest)
 #       --chezmoi-tag TAG    chezmoi release tag (default: latest)
-#
-# Any arguments after the installer options are forwarded to chezmoi.
 
 set -eu
 
@@ -74,12 +63,4 @@ else
   curl -fsSL "$URL" | tar xz -C "$BIN_DIR"
 fi
 
-# No remaining args: binaries-only install
-if [ $# -eq 0 ]; then
-  printf '\nchezmoi and chezmoi-recipes installed to %s\n' "$BIN_DIR"
-  exit 0
-fi
-
-# Forward remaining args to chezmoi (e.g., init --apply username ...)
-_log "Running chezmoi $*"
-exec chezmoi "$@"
+printf '\nchezmoi and chezmoi-recipes installed to %s\n' "$BIN_DIR"
