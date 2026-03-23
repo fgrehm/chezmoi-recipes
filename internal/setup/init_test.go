@@ -15,7 +15,7 @@ func TestRunInit_CreatesChezmoiroot(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatalf("RunInit() error = %v", err)
 	}
 
@@ -36,7 +36,7 @@ func TestRunInit_CreatesHomeDir(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatalf("RunInit() error = %v", err)
 	}
 
@@ -57,7 +57,7 @@ func TestRunInit_WritesConfigToHome(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatalf("RunInit() error = %v", err)
 	}
 
@@ -88,7 +88,7 @@ func TestRunInit_AddsCompiledHomeToGitignore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatalf("RunInit() error = %v", err)
 	}
 
@@ -114,10 +114,10 @@ func TestRunInit_GitignoreIdempotent(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := RunInit(repoRoot, recipesDir, true); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", true); err != nil {
 		t.Fatal(err)
 	}
 
@@ -139,7 +139,7 @@ func TestRunInit_ConfigTemplateNoApplyPre(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatal(err)
 	}
 
@@ -165,7 +165,7 @@ func TestRunInit_ConfigTemplateHasGuardHooks(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatal(err)
 	}
 
@@ -192,7 +192,7 @@ func TestRunInit_CompiledHomePopulated(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatal(err)
 	}
 
@@ -210,7 +210,7 @@ func TestRunInit_CreatesRecipesDir(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatal(err)
 	}
 
@@ -231,11 +231,11 @@ func TestRunInit_SkipExistingConfig(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatal(err)
 	}
 
-	result, err := RunInit(repoRoot, recipesDir, false)
+	result, err := RunInit(repoRoot, recipesDir, "", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -252,7 +252,7 @@ func TestRunInit_ForceOverwriteConfig(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatal(err)
 	}
 
@@ -262,7 +262,7 @@ func TestRunInit_ForceOverwriteConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := RunInit(repoRoot, recipesDir, true)
+	result, err := RunInit(repoRoot, recipesDir, "", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,7 +287,7 @@ func TestRunInit_CreatesEditorConfig(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatalf("RunInit() error = %v", err)
 	}
 
@@ -309,7 +309,7 @@ func TestRunInit_CreatesShellcheckRC(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatalf("RunInit() error = %v", err)
 	}
 
@@ -331,7 +331,7 @@ func TestRunInit_CreatesReadme(t *testing.T) {
 	repoRoot := t.TempDir()
 	recipesDir := filepath.Join(repoRoot, "recipes")
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatalf("RunInit() error = %v", err)
 	}
 
@@ -353,7 +353,7 @@ func TestRunInit_DoesNotOverwriteExistingEditorConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatalf("RunInit() error = %v", err)
 	}
 
@@ -379,7 +379,7 @@ func TestRunInit_DoesNotOverwriteExistingShellcheckRC(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatalf("RunInit() error = %v", err)
 	}
 
@@ -405,7 +405,7 @@ func TestRunInit_DoesNotOverwriteExistingReadme(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := RunInit(repoRoot, recipesDir, false); err != nil {
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
 		t.Fatalf("RunInit() error = %v", err)
 	}
 
@@ -415,6 +415,81 @@ func TestRunInit_DoesNotOverwriteExistingReadme(t *testing.T) {
 	}
 	if string(data) != existing {
 		t.Error("existing README.md should not be overwritten")
+	}
+}
+
+func TestRunInit_CreatesInstallScript(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, "git@github.com:user/dotfiles", false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, "install.sh"))
+	if err != nil {
+		t.Fatalf("install.sh not found: %v", err)
+	}
+	content := string(data)
+
+	if !strings.Contains(content, "git@github.com:user/dotfiles") {
+		t.Error("install.sh should contain the repo URL")
+	}
+	if !strings.Contains(content, "chezmoi-recipes overlay") {
+		t.Error("install.sh should run chezmoi-recipes overlay")
+	}
+	if !strings.Contains(content, "chezmoi init") {
+		t.Error("install.sh should run chezmoi init")
+	}
+	if !strings.Contains(content, "chezmoi apply") {
+		t.Error("install.sh should run chezmoi apply")
+	}
+}
+
+func TestRunInit_SkipsInstallScriptWithoutURL(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	if _, err := RunInit(repoRoot, recipesDir, "", false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(repoRoot, "install.sh")); err == nil {
+		t.Error("install.sh should not be created without a repo URL")
+	}
+}
+
+func TestRunInit_DoesNotOverwriteExistingInstallScript(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	repoRoot := t.TempDir()
+	recipesDir := filepath.Join(repoRoot, "recipes")
+
+	existing := "#!/bin/sh\n# custom install\n"
+	if err := os.WriteFile(filepath.Join(repoRoot, "install.sh"), []byte(existing), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := RunInit(repoRoot, recipesDir, "git@github.com:user/dotfiles", false); err != nil {
+		t.Fatalf("RunInit() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(repoRoot, "install.sh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != existing {
+		t.Error("existing install.sh should not be overwritten")
 	}
 }
 
