@@ -72,8 +72,11 @@ func RunInit(repoRoot, recipesDir, repoURL string, force bool) (*InitResult, err
 	// Write install.sh if a repo URL was provided.
 	if repoURL != "" {
 		relRecDir, err := filepath.Rel(repoRoot, recipesDir)
-		if err != nil || relRecDir == ".." || strings.HasPrefix(relRecDir, ".."+string(os.PathSeparator)) {
-			return nil, fmt.Errorf("recipes directory %s is outside repo root %s", recipesDir, repoRoot)
+		if err != nil {
+			return nil, fmt.Errorf("computing relative recipes path from %q to %q: %w", repoRoot, recipesDir, err)
+		}
+		if relRecDir == ".." || strings.HasPrefix(relRecDir, ".."+string(os.PathSeparator)) {
+			return nil, fmt.Errorf("recipes directory %q is outside repo root %q", recipesDir, repoRoot)
 		}
 		script := generateInstallScript(repoURL, relRecDir)
 		installPath := filepath.Join(repoRoot, "install.sh")
