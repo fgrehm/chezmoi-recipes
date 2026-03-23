@@ -44,11 +44,7 @@ func RunInit(repoRoot, recipesDir, repoURL string, force bool) (*InitResult, err
 	}
 
 	// Write .chezmoi.toml.tmpl into home/.
-	absRecDir, err := filepath.Abs(recipesDir)
-	if err != nil {
-		absRecDir = recipesDir
-	}
-	skipped, err := WriteChezmoiConfig(homeDir, repoRoot, absRecDir, force)
+	skipped, err := WriteChezmoiConfig(homeDir, repoRoot, recipesDir, force)
 	if err != nil {
 		return nil, err
 	}
@@ -75,8 +71,17 @@ func RunInit(repoRoot, recipesDir, repoURL string, force bool) (*InitResult, err
 
 	// Write install.sh if a repo URL was provided.
 	if repoURL != "" {
-		if err := writeIfMissing(filepath.Join(repoRoot, "install.sh"), generateInstallScript(repoURL)); err != nil {
+		relRecDir, err := filepath.Rel(repoRoot, recipesDir)
+		if err != nil {
+			relRecDir = "recipes"
+		}
+		script := generateInstallScript(repoURL, relRecDir)
+		installPath := filepath.Join(repoRoot, "install.sh")
+		if err := writeIfMissing(installPath, script); err != nil {
 			return nil, fmt.Errorf("writing install.sh: %w", err)
+		}
+		if err := os.Chmod(installPath, 0o755); err != nil {
+			return nil, fmt.Errorf("setting install.sh permissions: %w", err)
 		}
 	}
 
@@ -151,9 +156,11 @@ chezmoi apply
 ` + "```" + `
 `
 
-// generateInstallScript returns an install.sh with the repo URL baked in.
-func generateInstallScript(repoURL string) string {
-	return fmt.Sprintf(installScriptTemplate, repoURL)
+// generateInstallScript returns an install.sh with the repo URL and recipes
+// directory relative path baked in. Single quotes prevent shell interpolation
+// of the URL.
+func generateInstallScript(repoURL, recipesRelDir string) string {
+	return fmt.Sprintf(installScriptTemplate, repoURL, recipesRelDir)
 }
 
 const installScriptTemplate = `#!/bin/sh
@@ -201,7 +208,7 @@ if ! command -v chezmoi-recipes >/dev/null 2>&1; then
     | tar xz -C "$BIN_DIR"
 fi
 
-REPO_URL="%s"
+REPO_URL='%s'
 SOURCE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/chezmoi"
 
 # Clone dotfiles
@@ -214,7 +221,7 @@ fi
 
 # Build compiled-home/ so chezmoi can find the config template
 _log "Building overlay"
-chezmoi-recipes overlay --recipes-dir "$SOURCE_DIR/recipes"
+chezmoi-recipes overlay --recipes-dir "$SOURCE_DIR/%s"
 
 # Initialize chezmoi (processes config template, prompts for user data)
 _log "Initializing chezmoi"

@@ -63,4 +63,10 @@ else
   curl -fsSL "$URL" | tar xz -C "$BIN_DIR"
 fi
 
+if [ $# -gt 0 ]; then
+  _die "unexpected arguments: $*
+This script only installs binaries. For full dotfiles setup, use the
+install.sh generated in your dotfiles repo by 'chezmoi-recipes init'."
+fi
+
 printf '\nchezmoi and chezmoi-recipes installed to %s\n' "$BIN_DIR"

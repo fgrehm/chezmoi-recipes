@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os/exec"
@@ -17,7 +18,7 @@ var initCmd = &cobra.Command{
 	Short: "Initialize chezmoi-recipes (set up .chezmoiroot, config template, and recipes directory)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		force, _ := cmd.Flags().GetBool("force")
-		return runInitCmd(recipesDir(), force, cmd.InOrStdin(), cmd.OutOrStdout())
+		return runInitCmd(cmd.Context(), recipesDir(), force, cmd.InOrStdin(), cmd.OutOrStdout())
 	},
 }
 
@@ -26,20 +27,22 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 }
 
-func runInitCmd(recDir string, force bool, r io.Reader, w io.Writer) error {
+func runInitCmd(ctx context.Context, recDir string, force bool, r io.Reader, w io.Writer) error {
 	absRecDir, err := filepath.Abs(recDir)
 	if err != nil {
 		absRecDir = recDir
 	}
 	repoRoot := filepath.Dir(absRecDir)
 
-	repoURL := detectRepoURL(repoRoot)
+	repoURL := detectRepoURL(ctx, repoRoot)
 	if repoURL == "" {
 		fmt.Fprint(w, "Git remote 'origin' not found.\n")
 		fmt.Fprint(w, "Repository URL for install.sh (leave empty to skip): ")
 		scanner := bufio.NewScanner(r)
 		if scanner.Scan() {
 			repoURL = strings.TrimSpace(scanner.Text())
+		} else if err := scanner.Err(); err != nil {
+			return fmt.Errorf("reading repository URL from stdin: %w", err)
 		}
 	}
 
@@ -75,8 +78,8 @@ func runInitCmd(recDir string, force bool, r io.Reader, w io.Writer) error {
 }
 
 // detectRepoURL returns the origin remote URL, or "" if unavailable.
-func detectRepoURL(repoRoot string) string {
-	cmd := exec.Command("git", "-C", repoRoot, "remote", "get-url", "origin")
+func detectRepoURL(ctx context.Context, repoRoot string) string {
+	cmd := exec.CommandContext(ctx, "git", "-C", repoRoot, "remote", "get-url", "origin")
 	out, err := cmd.Output()
 	if err != nil {
 		return ""
