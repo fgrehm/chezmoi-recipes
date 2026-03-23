@@ -34,9 +34,13 @@ func runInitCmd(ctx context.Context, recDir string, force bool, r io.Reader, w i
 	}
 	repoRoot := filepath.Dir(absRecDir)
 
-	repoURL := detectRepoURL(ctx, repoRoot)
+	repoURL, detectErr := detectRepoURL(ctx, repoRoot)
 	if repoURL == "" {
-		fmt.Fprint(w, "Git remote 'origin' not found.\n")
+		if detectErr != nil {
+			fmt.Fprintf(w, "Could not detect repository URL: %s\n", detectErr)
+		} else {
+			fmt.Fprint(w, "No git remote 'origin' configured.\n")
+		}
 		fmt.Fprint(w, "Repository URL for install.sh (leave empty to skip): ")
 		scanner := bufio.NewScanner(r)
 		if scanner.Scan() {
@@ -77,12 +81,16 @@ func runInitCmd(ctx context.Context, recDir string, force bool, r io.Reader, w i
 	return nil
 }
 
-// detectRepoURL returns the origin remote URL, or "" if unavailable.
-func detectRepoURL(ctx context.Context, repoRoot string) string {
+// detectRepoURL returns the origin remote URL, or ("", err) if unavailable.
+// err carries the underlying git error message for display to the user.
+func detectRepoURL(ctx context.Context, repoRoot string) (string, error) {
 	cmd := exec.CommandContext(ctx, "git", "-C", repoRoot, "remote", "get-url", "origin")
 	out, err := cmd.Output()
 	if err != nil {
-		return ""
+		if exitErr, ok := err.(*exec.ExitError); ok && len(exitErr.Stderr) > 0 {
+			return "", fmt.Errorf("%s", strings.TrimSpace(string(exitErr.Stderr)))
+		}
+		return "", err
 	}
-	return strings.TrimSpace(string(out))
+	return strings.TrimSpace(string(out)), nil
 }
