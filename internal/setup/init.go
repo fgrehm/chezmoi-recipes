@@ -164,7 +164,7 @@ chezmoi apply
 // directory relative path baked in. The URL is embedded inside single quotes
 // with internal single quotes escaped so it is safe regardless of URL content.
 func generateInstallScript(repoURL, recipesRelDir string) string {
-	return fmt.Sprintf(installScriptTemplate, shellEscapeSingleQuoted(repoURL), recipesRelDir)
+	return fmt.Sprintf(installScriptTemplate, shellEscapeSingleQuoted(repoURL), shellEscapeSingleQuoted(recipesRelDir))
 }
 
 // shellEscapeSingleQuoted escapes s for embedding inside single quotes in
@@ -237,7 +237,7 @@ fi
 
 # Build compiled-home/ so chezmoi can find the config template
 _log "Building overlay"
-chezmoi-recipes overlay --recipes-dir "$SOURCE_DIR/%s"
+chezmoi-recipes overlay --recipes-dir "$SOURCE_DIR"/'%s'
 
 # Initialize chezmoi (processes config template, prompts for user data)
 _log "Initializing chezmoi"
