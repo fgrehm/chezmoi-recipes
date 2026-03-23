@@ -137,12 +137,6 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/username/dotfiles/main/ins
   --promptString "Email=you@example.com"
 ```
 
-**Install binaries only** (without cloning a dotfiles repo):
-
-```bash
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/fgrehm/chezmoi-recipes/main/install.sh)"
-```
-
 **Go install:**
 ```bash
 go install github.com/fgrehm/chezmoi-recipes@latest
