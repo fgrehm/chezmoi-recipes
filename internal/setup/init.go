@@ -157,10 +157,16 @@ chezmoi apply
 `
 
 // generateInstallScript returns an install.sh with the repo URL and recipes
-// directory relative path baked in. Single quotes prevent shell interpolation
-// of the URL.
+// directory relative path baked in. The URL is embedded inside single quotes
+// with internal single quotes escaped so it is safe regardless of URL content.
 func generateInstallScript(repoURL, recipesRelDir string) string {
-	return fmt.Sprintf(installScriptTemplate, repoURL, recipesRelDir)
+	return fmt.Sprintf(installScriptTemplate, shellEscapeSingleQuoted(repoURL), recipesRelDir)
+}
+
+// shellEscapeSingleQuoted escapes s for embedding inside single quotes in
+// shell by replacing each ' with '\''.
+func shellEscapeSingleQuoted(s string) string {
+	return strings.ReplaceAll(s, "'", `'\''`)
 }
 
 const installScriptTemplate = `#!/bin/sh
@@ -175,7 +181,8 @@ const installScriptTemplate = `#!/bin/sh
 #     --promptString "Full name=Your Name" \
 #     --promptString "Email=you@example.com"
 #
-# All arguments are forwarded to chezmoi init.
+# Arguments (e.g. --promptString) are forwarded to chezmoi init.
+# Do not pass --apply; the script always runs chezmoi apply as the final step.
 
 set -eu
 
@@ -185,6 +192,11 @@ _log() { printf '\033[1;34m==> %%s\033[0m\n' "$*"; }
 _die() { printf '\033[1;31merror: %%s\033[0m\n' "$*" >&2; exit 1; }
 
 [ "$(uname -s)" = "Linux" ] || _die "only Linux is supported"
+
+for _arg in "$@"; do
+  [ "$_arg" != "--apply" ] || _die "--apply is not needed: this script always runs chezmoi apply"
+done
+unset _arg
 
 case "$(uname -m)" in
   x86_64)        ARCH=amd64 ;;
