@@ -11,12 +11,9 @@ import (
 	"github.com/fgrehm/chezmoi-recipes/internal/recipe"
 )
 
-// HomeOwner is the owner name used for entries from the home/ directory.
-const HomeOwner = "home"
-
 // SourceEntry records which source contributed an entry and its raw source name.
 type SourceEntry struct {
-	Owner      string // HomeOwner or recipe name
+	Owner      string // "home" or recipe name
 	SourcePath string // source-relative path, e.g. "private_dot_config/nvim/init.lua"
 }
 
@@ -61,7 +58,7 @@ func DetectConflicts(homeDir string, recipes []*recipe.Recipe) error {
 	seen := make(map[string]SourceEntry)
 
 	// Scan home/ first.
-	if err := scanSource(homeDir, HomeOwner, seen); err != nil {
+	if err := scanSource(homeDir, "home", seen); err != nil {
 		return err
 	}
 
