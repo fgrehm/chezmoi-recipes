@@ -79,7 +79,7 @@ cmd/chezmoi-recipes/
   main.go               # signal context, calls ExecuteContext
   cmd/                  # one file per Cobra subcommand
 internal/
-  overlay/              # ClearDir + CopyTree + recipe overlay -> compiled-home/
+  overlay/              # ClearDir + CopyTree + recipe overlay + conflict detection -> compiled-home/
   paths/                # path helpers (CompiledHomeDir, HomeDir, XDG state dir)
   recipe/               # discover and load recipe directories
   scaffold/             # generate new recipe skeletons
