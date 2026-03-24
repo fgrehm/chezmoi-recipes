@@ -26,6 +26,8 @@ chezmoi-recipes uses chezmoi's [`.chezmoiroot`](https://www.chezmoi.io/reference
 
 `home/` contains chezmoi source files that don't belong to any recipe (config template, shell configs, etc.). `recipes/` contains recipe directories. `compiled-home/` is the merge of both, rebuilt on every overlay run.
 
+The directory names `home/`, `recipes/`, and `compiled-home/` are hardcoded conventions. `compiled-home` must match the value in `.chezmoiroot`. If you need a different layout, open an issue.
+
 ## Integration hooks
 
 chezmoi-recipes uses two kinds of [chezmoi hooks](https://www.chezmoi.io/reference/configuration-file/hooks/): one functional hook and a set of guard hooks.

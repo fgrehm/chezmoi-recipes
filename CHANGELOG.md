@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Features
+
+- `overlay` detects target-path conflicts across home/ and recipes before copying. Catches both direct file collisions (same file in home/ and a recipe) and chezmoi attribute prefix mismatches (e.g. `dot_config` vs `private_dot_config` mapping to the same target `.config`). Previously these only surfaced as confusing `inconsistent state` errors from chezmoi at apply time.
+
 ## [v0.4.0] - 2026-03-23
 
 ### Breaking changes

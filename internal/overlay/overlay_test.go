@@ -117,15 +117,15 @@ func TestPlan_ConflictWithOtherRecipe(t *testing.T) {
 		t.Fatal("Plan() should fail with conflict error")
 	}
 
-	conflictErr, ok := err.(*ConflictError)
+	ownerErr, ok := err.(*OwnershipError)
 	if !ok {
-		t.Fatalf("expected *ConflictError, got %T: %v", err, err)
+		t.Fatalf("expected *OwnershipError, got %T: %v", err, err)
 	}
-	if conflictErr.ExistingOwner != "git" {
-		t.Errorf("ExistingOwner = %q, want %q", conflictErr.ExistingOwner, "git")
+	if ownerErr.ExistingOwner != "git" {
+		t.Errorf("ExistingOwner = %q, want %q", ownerErr.ExistingOwner, "git")
 	}
-	if conflictErr.Recipe != "vim" {
-		t.Errorf("Recipe = %q, want %q", conflictErr.Recipe, "vim")
+	if ownerErr.Recipe != "vim" {
+		t.Errorf("Recipe = %q, want %q", ownerErr.Recipe, "vim")
 	}
 }
 
@@ -149,12 +149,12 @@ func TestPlan_ConflictWithUntrackedFile(t *testing.T) {
 		t.Fatal("Plan() should fail with conflict error for untracked file")
 	}
 
-	conflictErr, ok := err.(*ConflictError)
+	ownerErr, ok := err.(*OwnershipError)
 	if !ok {
-		t.Fatalf("expected *ConflictError, got %T: %v", err, err)
+		t.Fatalf("expected *OwnershipError, got %T: %v", err, err)
 	}
-	if conflictErr.ExistingOwner != "" {
-		t.Errorf("ExistingOwner = %q, want empty string", conflictErr.ExistingOwner)
+	if ownerErr.ExistingOwner != "" {
+		t.Errorf("ExistingOwner = %q, want empty string", ownerErr.ExistingOwner)
 	}
 }
 
@@ -406,8 +406,8 @@ func TestReadIgnoreEntries_ReturnsEmptyWhenMissing(t *testing.T) {
 	}
 }
 
-func TestConflictError_UntrackedFile(t *testing.T) {
-	err := &ConflictError{
+func TestOwnershipError_UntrackedFile(t *testing.T) {
+	err := &OwnershipError{
 		RelPath: "dot_gitconfig",
 		Recipe:  "vim",
 	}
@@ -424,8 +424,8 @@ func TestConflictError_UntrackedFile(t *testing.T) {
 	}
 }
 
-func TestConflictError_OwnedByOtherRecipe(t *testing.T) {
-	err := &ConflictError{
+func TestOwnershipError_OwnedByOtherRecipe(t *testing.T) {
+	err := &OwnershipError{
 		RelPath:       "dot_gitconfig",
 		ExistingOwner: "git",
 		Recipe:        "vim",
