@@ -44,7 +44,7 @@ func TestDetectConflicts_HomeRecipeSameFile(t *testing.T) {
 	if len(ce.Entries) != 2 {
 		t.Fatalf("expected 2 entries, got %d", len(ce.Entries))
 	}
-	if ce.Entries[0].Owner != "home" {
+	if ce.Entries[0].Owner != HomeOwner {
 		t.Errorf("first entry owner = %q, want %q", ce.Entries[0].Owner, "home")
 	}
 	if ce.Entries[1].Owner != "git" {
@@ -234,7 +234,7 @@ func TestConflictError_SameSourcePath(t *testing.T) {
 	err := &ConflictError{
 		TargetPath: ".gitconfig",
 		Entries: []SourceEntry{
-			{Owner: "home", SourcePath: "dot_gitconfig"},
+			{Owner: HomeOwner, SourcePath: "dot_gitconfig"},
 			{Owner: "git", SourcePath: "dot_gitconfig"},
 		},
 	}

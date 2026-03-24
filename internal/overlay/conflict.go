@@ -11,9 +11,12 @@ import (
 	"github.com/fgrehm/chezmoi-recipes/internal/recipe"
 )
 
+// HomeOwner is the owner name used for entries from the home/ directory.
+const HomeOwner = "home"
+
 // SourceEntry records which source contributed an entry and its raw source name.
 type SourceEntry struct {
-	Owner      string // "home" or recipe name
+	Owner      string // HomeOwner or recipe name
 	SourcePath string // source-relative path, e.g. "private_dot_config/nvim/init.lua"
 }
 
@@ -58,7 +61,7 @@ func DetectConflicts(homeDir string, recipes []*recipe.Recipe) error {
 	seen := make(map[string]SourceEntry)
 
 	// Scan home/ first.
-	if err := scanSource(homeDir, "home", seen); err != nil {
+	if err := scanSource(homeDir, HomeOwner, seen); err != nil {
 		return err
 	}
 
@@ -103,8 +106,11 @@ func scanSource(root, owner string, seen map[string]SourceEntry) error {
 		}
 
 		targetPath := ParseTargetPath(relPath, d.IsDir())
+		current := SourceEntry{Owner: owner, SourcePath: relPath}
 		existing, found := seen[targetPath]
+
 		if found {
+			conflict := false
 			if d.IsDir() {
 				// Directories: multiple recipes can share a parent dir (e.g.
 				// .config) as long as they agree on attributes (same source
@@ -118,28 +124,20 @@ func scanSource(root, owner string, seen map[string]SourceEntry) error {
 				// source name. Walk ordering guarantees parent dirs are
 				// visited before children, so a mismatch at any level is
 				// caught before descending further.
-				if filepath.Base(existing.SourcePath) != filepath.Base(relPath) {
-					return &ConflictError{
-						TargetPath: targetPath,
-						Entries: []SourceEntry{
-							existing,
-							{Owner: owner, SourcePath: relPath},
-						},
-					}
-				}
-			} else if existing.Owner != owner {
+				conflict = filepath.Base(existing.SourcePath) != filepath.Base(relPath)
+			} else {
 				// Files: same target from different owners always conflicts,
 				// regardless of whether the source names match.
+				conflict = existing.Owner != owner
+			}
+			if conflict {
 				return &ConflictError{
 					TargetPath: targetPath,
-					Entries: []SourceEntry{
-						existing,
-						{Owner: owner, SourcePath: relPath},
-					},
+					Entries:    []SourceEntry{existing, current},
 				}
 			}
 		} else {
-			seen[targetPath] = SourceEntry{Owner: owner, SourcePath: relPath}
+			seen[targetPath] = current
 		}
 
 		return nil

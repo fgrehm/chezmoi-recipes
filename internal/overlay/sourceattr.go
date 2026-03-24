@@ -5,9 +5,8 @@ import (
 	"strings"
 )
 
-// Directory attribute prefixes in chezmoi's defined order.
-// If chezmoi adds new directory prefixes, update this list.
 // https://www.chezmoi.io/reference/source-state-attributes/
+// If chezmoi adds new prefixes, update these lists.
 var dirPrefixes = []string{
 	"remove_",
 	"external_",
@@ -16,10 +15,7 @@ var dirPrefixes = []string{
 	"readonly_",
 }
 
-// File attribute prefixes in chezmoi's defined order.
-// Mutually exclusive type prefixes (create_, modify_, run_*, symlink_) are
-// handled first, then the remaining attribute prefixes.
-// Ordered longest-first so "run_once_before_" matches before "run_once_" or "run_".
+// Ordered longest-first so "run_once_before_" matches before "run_once_".
 var fileTypePrefixes = []string{
 	"run_onchange_before_",
 	"run_onchange_after_",
@@ -43,7 +39,6 @@ var fileAttrPrefixes = []string{
 	"executable_",
 }
 
-// File attribute suffixes stripped from the end.
 var fileSuffixes = []string{
 	".tmpl",
 	".literal",
