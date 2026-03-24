@@ -65,8 +65,8 @@ func runOverlay(ctx context.Context, names []string, dryRun, quiet bool, recipes
 		return err
 	}
 
-	// Detect home/recipe conflicts before any copying.
-	if err := overlay.DetectHomeRecipeConflicts(homeDir, recipes); err != nil {
+	// Detect target-path conflicts (file collisions + attribute mismatches).
+	if err := overlay.DetectConflicts(homeDir, recipes); err != nil {
 		return err
 	}
 

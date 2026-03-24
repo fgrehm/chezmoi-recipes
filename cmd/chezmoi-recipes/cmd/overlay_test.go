@@ -746,12 +746,12 @@ func TestRunOverlay_HomeRecipeConflict(t *testing.T) {
 		t.Fatal("expected home/recipe conflict error")
 	}
 
-	hce, ok := err.(*overlay.HomeConflictError)
+	ce, ok := err.(*overlay.ConflictError)
 	if !ok {
-		t.Fatalf("expected *overlay.HomeConflictError, got %T: %v", err, err)
+		t.Fatalf("expected *overlay.ConflictError, got %T: %v", err, err)
 	}
-	if hce.RelPath != "dot_gitconfig" {
-		t.Errorf("RelPath = %q, want %q", hce.RelPath, "dot_gitconfig")
+	if ce.TargetPath != ".gitconfig" {
+		t.Errorf("TargetPath = %q, want %q", ce.TargetPath, ".gitconfig")
 	}
 }
 

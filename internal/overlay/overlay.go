@@ -16,14 +16,16 @@ import (
 	"github.com/fgrehm/chezmoi-recipes/internal/state"
 )
 
-// ConflictError indicates a file conflict between recipes or with an untracked file.
-type ConflictError struct {
+// OwnershipError indicates a file in compiled-home/ is owned by a different
+// recipe (or is untracked). This is a safety net checked during Plan/Execute
+// after the pre-flight DetectConflicts has already run.
+type OwnershipError struct {
 	RelPath       string
 	ExistingOwner string // empty string means untracked (not owned by any recipe)
 	Recipe        string
 }
 
-func (e *ConflictError) Error() string {
+func (e *OwnershipError) Error() string {
 	if e.ExistingOwner == "" {
 		return fmt.Sprintf(
 			"conflict: %q already exists in source dir (untracked, not owned by any recipe)\n"+
@@ -110,9 +112,9 @@ func Plan(_ context.Context, r *recipe.Recipe, sourceDir string, store *state.St
 					result.Unchanged = append(result.Unchanged, relPath)
 				}
 			case "":
-				return &ConflictError{RelPath: relPath, Recipe: r.Name}
+				return &OwnershipError{RelPath: relPath, Recipe: r.Name}
 			default:
-				return &ConflictError{RelPath: relPath, ExistingOwner: owner, Recipe: r.Name}
+				return &OwnershipError{RelPath: relPath, ExistingOwner: owner, Recipe: r.Name}
 			}
 		} else {
 			result.Added = append(result.Added, relPath)
