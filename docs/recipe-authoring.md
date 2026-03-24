@@ -21,10 +21,11 @@ A directory under `recipes/` with a `README.md` is a recipe. The directory name 
 <recipe-name>/
 ├── README.md            # Required. Documents what the recipe does.
 └── chezmoi/             # Required. chezmoi source state fragment.
-    ├── .chezmoiscripts/  # Scripts (install, configure, completions)
-    ├── dot_*             # dot_ becomes . in target path
-    ├── private_dot_*     # 0600/0700 permissions
-    └── ...               # Any valid chezmoi source state structure
+    ├── .chezmoiexternals/  # External binaries/files (GitHub releases, archives)
+    ├── .chezmoiscripts/    # Scripts (install, configure, completions)
+    ├── dot_*               # dot_ becomes . in target path
+    ├── private_dot_*       # 0600/0700 permissions
+    └── ...                 # Any valid chezmoi source state structure
 ```
 
 chezmoi naming reference: https://www.chezmoi.io/reference/source-state-attributes/
@@ -35,8 +36,9 @@ chezmoi naming reference: https://www.chezmoi.io/reference/source-state-attribut
 recipes/git/
   README.md
   chezmoi/
+    .chezmoiexternals/
+      gh.toml                               # 1. download binary from GitHub
     .chezmoiscripts/
-      run_once_install-gh.sh.tmpl           # 1. install the tool
       run_onchange_after_completions-gh.sh  # 2. generate completions
     private_dot_config/git/config.tmpl      # 3. config files
     dot_shellrc.d/git.sh                    # 4. shell integration
@@ -197,34 +199,40 @@ fi
 
 ### Binary from GitHub releases
 
-```bash
-#!/bin/env bash
-source "$CHEZMOI_SOURCE_DIR/scripts/ui.bash"
+Use chezmoi's [`.chezmoiexternals/`](https://www.chezmoi.io/reference/special-directories/chezmoiexternals/) directory instead of a shell install script. Place a `<tool>.toml` file inside `chezmoi/.chezmoiexternals/` in your recipe. chezmoi-recipes overlays it into `compiled-home/.chezmoiexternals/`, and chezmoi downloads and installs the binary at apply time.
 
-TOOL="mytool"
-VERSION="1.2.3"
-DEST="$HOME/.local/bin/$TOOL"
+Each file in `.chezmoiexternals/` is always rendered as a template (no `.tmpl` extension needed), so chezmoi template functions work directly.
 
-if [[ -x "$DEST" ]]; then
-  log_skip "$TOOL already installed"
-  exit 0
-fi
-
-_install() {
-  set -e
-  log_info "Installing $TOOL v$VERSION..."
-  mkdir -p "$(dirname "$DEST")"
-  curl -fsSL "https://github.com/org/$TOOL/releases/download/v$VERSION/${TOOL}_${VERSION}_linux_amd64.tar.gz" \
-    | tar -xz -C /tmp "$TOOL"
-  mv "/tmp/$TOOL" "$DEST"
-  chmod +x "$DEST"
-}
-
-if ! _install; then
-  log_error "Failed to install $TOOL (network unavailable?)"
-  log_info "Run 'chezmoi apply' again after fixing network access."
-fi
+```toml
+# chezmoi/.chezmoiexternals/diffnav.toml
+{{- $arch := .chezmoi.arch -}}
+{{- if eq $arch "amd64" -}}{{- $arch = "x86_64" -}}{{- end -}}
+[".local/bin/diffnav"]
+  type = "archive-file"
+  url = "https://github.com/dlvhdr/diffnav/releases/latest/download/diffnav_Linux_{{ $arch }}.tar.gz"
+  executable = true
+  path = "diffnav"
 ```
+
+Prefer direct `/releases/latest/download/` URLs over `gitHubLatestReleaseAssetURL`: GitHub redirects these without an API call, so template rendering works offline and in rate-limited environments (e.g., CI). Use `{{ $arch }}` interpolation directly inside the TOML string — chezmoi renders the template before parsing the TOML.
+
+If the archive has a version-prefixed top-level directory (common in Rust/Go releases), pin the version explicitly rather than using `gitHubLatestRelease`:
+
+```toml
+# chezmoi/.chezmoiexternals/delta.toml
+{{- $arch := .chezmoi.arch -}}
+{{- if eq $arch "amd64" -}}{{- $arch = "x86_64" -}}{{- else if eq $arch "arm64" -}}{{- $arch = "aarch64" -}}{{- end -}}
+{{- $version := "0.19.1" -}}
+[".local/bin/delta"]
+  type = "archive-file"
+  url = "https://github.com/dandavison/delta/releases/download/{{ $version }}/delta-{{ $version }}-{{ $arch }}-unknown-linux-gnu.tar.gz"
+  path = "delta-{{ $version }}-{{ $arch }}-unknown-linux-gnu/delta"
+  executable = true
+```
+
+Multiple recipes can each have their own `.chezmoiexternals/*.toml` files. Since each file has a unique name (the tool name), there are no overlay conflicts.
+
+Use a shell install script only when `.chezmoiexternals/` is not sufficient: apt packages, tools that need post-install setup, or tools distributed as standalone binaries (not archives).
 
 ### Shell completions
 
