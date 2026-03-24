@@ -217,7 +217,7 @@ export PATH="$BIN_DIR:$PATH"
 # Install chezmoi
 if ! command -v chezmoi >/dev/null 2>&1; then
   _log "Installing chezmoi"
-  sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$BIN_DIR"
+  BINDIR="$BIN_DIR" sh -c "$(curl -fsLS get.chezmoi.io)"
 fi
 
 # Install chezmoi-recipes
