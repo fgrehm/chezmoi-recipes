@@ -6,6 +6,7 @@ import (
 )
 
 // Directory attribute prefixes in chezmoi's defined order.
+// If chezmoi adds new directory prefixes, update this list.
 // https://www.chezmoi.io/reference/source-state-attributes/
 var dirPrefixes = []string{
 	"remove_",
@@ -64,11 +65,7 @@ func ParseDirTargetName(name string) string {
 	for _, prefix := range dirPrefixes {
 		name = strings.TrimPrefix(name, prefix)
 	}
-	if strings.HasPrefix(name, "literal_") {
-		return strings.TrimPrefix(name, "literal_")
-	}
-	name = replaceDotPrefix(name)
-	return name
+	return resolveLiteralOrDot(name)
 }
 
 // ParseFileTargetName strips chezmoi attribute prefixes and suffixes from a
@@ -94,10 +91,7 @@ func ParseFileTargetName(name string) string {
 	for _, prefix := range fileAttrPrefixes {
 		name = strings.TrimPrefix(name, prefix)
 	}
-	if strings.HasPrefix(name, "literal_") {
-		return strings.TrimPrefix(name, "literal_")
-	}
-	name = replaceDotPrefix(name)
+	name = resolveLiteralOrDot(name)
 	// Strip suffixes.
 	for _, suffix := range fileSuffixes {
 		name = strings.TrimSuffix(name, suffix)
@@ -138,8 +132,14 @@ func ParseTargetPath(sourceRelPath string, isDir bool) string {
 	return targetFile
 }
 
-// replaceDotPrefix converts a "dot_" prefix to a leading ".".
-func replaceDotPrefix(name string) string {
+// resolveLiteralOrDot handles the final name resolution after attribute
+// prefixes are stripped. If "literal_" remains, it is removed and the rest
+// is returned verbatim (no dot_ conversion). Otherwise, "dot_" is converted
+// to a leading ".".
+func resolveLiteralOrDot(name string) string {
+	if strings.HasPrefix(name, "literal_") {
+		return strings.TrimPrefix(name, "literal_")
+	}
 	if strings.HasPrefix(name, "dot_") {
 		return "." + strings.TrimPrefix(name, "dot_")
 	}
