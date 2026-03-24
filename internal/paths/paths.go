@@ -31,12 +31,20 @@ func ChezmoiConfigFile() (string, error) {
 
 // CompiledHomeDir returns the compiled-home directory path within a repo root.
 // This is where the overlay writes merged files from home/ and recipes/.
+//
+// The name "compiled-home" is hardcoded and must match the value in
+// .chezmoiroot at the repo root. Open to making this configurable if
+// anyone needs a different layout.
 func CompiledHomeDir(repoRoot string) string {
 	return filepath.Join(repoRoot, "compiled-home")
 }
 
 // HomeDir returns the home directory path within a repo root.
 // This is where users place freeform chezmoi source files.
+//
+// The name "home" is hardcoded. chezmoi-recipes assumes the repo layout
+// is home/ + recipes/ + compiled-home/. Open to making this configurable
+// if anyone needs a different layout.
 func HomeDir(repoRoot string) string {
 	return filepath.Join(repoRoot, "home")
 }
