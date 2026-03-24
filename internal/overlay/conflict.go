@@ -106,9 +106,18 @@ func scanSource(root, owner string, seen map[string]SourceEntry) error {
 		existing, found := seen[targetPath]
 		if found {
 			if d.IsDir() {
-				// Directories: multiple owners sharing a directory is fine as
-				// long as they agree on attributes (same source name).
-				// Different source names = attribute conflict.
+				// Directories: multiple recipes can share a parent dir (e.g.
+				// .config) as long as they agree on attributes (same source
+				// name). Different source names = attribute conflict.
+				//
+				// This comparison uses filepath.Base because the seen map is
+				// keyed by target path, and different recipes will have
+				// different full relative paths (e.g. "dot_config/alacritty"
+				// vs "dot_config/kitty"). We only care whether the directory
+				// component that maps to this target uses the same chezmoi
+				// source name. Walk ordering guarantees parent dirs are
+				// visited before children, so a mismatch at any level is
+				// caught before descending further.
 				if filepath.Base(existing.SourcePath) != filepath.Base(relPath) {
 					return &ConflictError{
 						TargetPath: targetPath,
@@ -119,7 +128,8 @@ func scanSource(root, owner string, seen map[string]SourceEntry) error {
 					}
 				}
 			} else if existing.Owner != owner {
-				// Files: same target from different owners is always a conflict.
+				// Files: same target from different owners always conflicts,
+				// regardless of whether the source names match.
 				return &ConflictError{
 					TargetPath: targetPath,
 					Entries: []SourceEntry{
