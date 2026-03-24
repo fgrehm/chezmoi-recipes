@@ -1,10 +1,20 @@
 # Changelog
 
-## [Unreleased]
+## [v0.5.0] - 2026-03-24
 
 ### Features
 
-- `overlay` detects target-path conflicts across home/ and recipes before copying. Catches both direct file collisions (same file in home/ and a recipe) and chezmoi attribute prefix mismatches (e.g. `dot_config` vs `private_dot_config` mapping to the same target `.config`). Previously these only surfaced as confusing `inconsistent state` errors from chezmoi at apply time.
+- `overlay` detects target-path conflicts across home/ and recipes before copying. Catches direct file collisions, attribute prefix mismatches (e.g. `dot_config` vs `private_dot_config`), same-owner attribute conflicts, and file-vs-directory collisions. Previously these only surfaced as confusing `inconsistent state` errors from chezmoi at apply time.
+
+### Fixes
+
+- `init` uses `BINDIR` env var for the chezmoi install script instead of the `-b` flag.
+
+### Docs
+
+- Document `private_dot_config` convention for `.config` directories.
+- Document `.chezmoiexternals/` pattern for GitHub release binaries.
+- Document hardcoded `home/` and `compiled-home/` directory name convention.
 
 ## [v0.4.0] - 2026-03-23
 
