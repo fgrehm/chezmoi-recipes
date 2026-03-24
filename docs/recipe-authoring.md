@@ -5,6 +5,7 @@
 - Every recipe directory must contain `README.md` and a `chezmoi/` subdirectory with at least one file
 - Each file in `chezmoi/` has exactly one owning recipe. Two recipes writing the same path causes a conflict error at overlay time
 - Name scripts after the tool: `run_once_install-gh.sh`, `run_once_install-neovim.sh`. Generic names like `run_once_install-packages.sh` collide across recipes
+- Use `private_dot_config` for all files under `.config`. Never use `dot_config` for the `.config` directory. chezmoi rejects an overlay where two recipes disagree on privacy for the same target directory with `inconsistent state`
 - Use `$HOME` in scripts and `{{ .chezmoi.homeDir }}` in templates for home directory paths
 - Use `$CHEZMOI_SOURCE_DIR` to reference the chezmoi source directory in scripts
 - Keep recipe data inline (in scripts, templates, config files). The `.chezmoidata/` directory is global to chezmoi and cannot be split across recipes
@@ -409,6 +410,16 @@ wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install
 Use this pattern when other files in the recipe (or other recipes) depend on the tool being present. The graceful `_install()` pattern is for tools where failure is inconvenient but not breaking.
 
 ## Common pitfalls
+
+### `dot_config` and `private_dot_config` cannot coexist for the same target
+
+chezmoi maps both `dot_config` and `private_dot_config` to the target directory `.config`, but with different permissions. If two recipes contribute to `.config` with different privacy prefixes, chezmoi refuses to apply:
+
+```
+chezmoi: .config: inconsistent state (...dot_config, ...private_dot_config)
+```
+
+Always use `private_dot_config` for files under `.config`. The `.config` directory holds user application state and is private by design. This applies to every recipe, every time -- there is no environment where mixing is acceptable.
 
 ### `chezmoi cd` goes to the repo root, not `recipes/`
 

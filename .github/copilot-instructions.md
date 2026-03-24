@@ -78,3 +78,4 @@ fix(overlay): handle missing home directory
 - **Atomic state.** Write state via `os.CreateTemp` + `os.Rename`, not `os.WriteFile`.
 - **XDG paths.** All runtime paths go through `internal/paths`. No hardcoded `~/.config` or `~/.local`.
 - **`chezmoi update` works natively.** The dotfiles repo is the chezmoi working tree. `chezmoi update` pulls the repo, then `read-source-state.pre` rebuilds `compiled-home/`. See `docs/chezmoi-integration.md`.
+- **`private_dot_config` only.** All recipes that deploy files under `.config` must use `private_dot_config`, never `dot_config`. If two recipes disagree on privacy for the same target directory, chezmoi refuses to apply with `inconsistent state`.
