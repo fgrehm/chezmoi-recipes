@@ -8,7 +8,15 @@ import (
 	"github.com/fgrehm/chezmoi-recipes/internal/recipe"
 )
 
+func setConflictTestEnv(t *testing.T) {
+	t.Helper()
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+}
+
 func TestDetectConflicts_NoConflict(t *testing.T) {
+	setConflictTestEnv(t)
 	homeDir := t.TempDir()
 	writeFile(t, filepath.Join(homeDir, "dot_bashrc"), "bashrc")
 
@@ -22,6 +30,7 @@ func TestDetectConflicts_NoConflict(t *testing.T) {
 }
 
 func TestDetectConflicts_HomeRecipeSameFile(t *testing.T) {
+	setConflictTestEnv(t)
 	homeDir := t.TempDir()
 	writeFile(t, filepath.Join(homeDir, "dot_gitconfig"), "home version")
 
@@ -53,6 +62,7 @@ func TestDetectConflicts_HomeRecipeSameFile(t *testing.T) {
 }
 
 func TestDetectConflicts_HomeRecipeAttributeMismatch(t *testing.T) {
+	setConflictTestEnv(t)
 	homeDir := t.TempDir()
 	writeFile(t, filepath.Join(homeDir, "dot_config", "starship.toml"), "home")
 
@@ -76,6 +86,7 @@ func TestDetectConflicts_HomeRecipeAttributeMismatch(t *testing.T) {
 }
 
 func TestDetectConflicts_RecipeVsRecipeAttributeMismatch(t *testing.T) {
+	setConflictTestEnv(t)
 	homeDir := t.TempDir() // empty
 
 	r1 := setupRecipe(t, "alacritty", map[string]string{
@@ -107,6 +118,7 @@ func TestDetectConflicts_RecipeVsRecipeAttributeMismatch(t *testing.T) {
 }
 
 func TestDetectConflicts_RecipeVsRecipeSameFile(t *testing.T) {
+	setConflictTestEnv(t)
 	homeDir := t.TempDir()
 
 	r1 := setupRecipe(t, "zsh", map[string]string{
@@ -131,6 +143,7 @@ func TestDetectConflicts_RecipeVsRecipeSameFile(t *testing.T) {
 }
 
 func TestDetectConflicts_NestedConflict(t *testing.T) {
+	setConflictTestEnv(t)
 	homeDir := t.TempDir()
 	writeFile(t, filepath.Join(homeDir, "dot_config", "nvim", "init.lua"), "home")
 
@@ -154,6 +167,7 @@ func TestDetectConflicts_NestedConflict(t *testing.T) {
 }
 
 func TestDetectConflicts_NoHomeDir(t *testing.T) {
+	setConflictTestEnv(t)
 	missing := filepath.Join(t.TempDir(), "nope")
 
 	r := setupRecipe(t, "git", map[string]string{
@@ -166,6 +180,7 @@ func TestDetectConflicts_NoHomeDir(t *testing.T) {
 }
 
 func TestDetectConflicts_RecipeWithoutChezmoi(t *testing.T) {
+	setConflictTestEnv(t)
 	homeDir := t.TempDir()
 	writeFile(t, filepath.Join(homeDir, "dot_bashrc"), "bashrc")
 
@@ -177,6 +192,7 @@ func TestDetectConflicts_RecipeWithoutChezmoi(t *testing.T) {
 }
 
 func TestDetectConflicts_SkipsChezmoiignore(t *testing.T) {
+	setConflictTestEnv(t)
 	homeDir := t.TempDir()
 	writeFile(t, filepath.Join(homeDir, ".chezmoiignore"), "some ignore")
 
@@ -191,7 +207,7 @@ func TestDetectConflicts_SkipsChezmoiignore(t *testing.T) {
 }
 
 func TestDetectConflicts_SameRecipeOwnerNoConflict(t *testing.T) {
-	// Two files from the same recipe under the same directory should not conflict.
+	setConflictTestEnv(t)
 	homeDir := t.TempDir()
 
 	r := setupRecipe(t, "neovim", map[string]string{
@@ -204,9 +220,33 @@ func TestDetectConflicts_SameRecipeOwnerNoConflict(t *testing.T) {
 	}
 }
 
+func TestDetectConflicts_SameOwnerAttributeMismatch(t *testing.T) {
+	setConflictTestEnv(t)
+	homeDir := t.TempDir()
+
+	// Same recipe uses both dot_bashrc and private_dot_bashrc, which map to
+	// the same target .bashrc with different attributes.
+	r := setupRecipe(t, "shell", map[string]string{
+		"dot_bashrc":         "public",
+		"private_dot_bashrc": "private",
+	})
+
+	err := DetectConflicts(homeDir, []*recipe.Recipe{r})
+	if err == nil {
+		t.Fatal("expected conflict for same-owner attribute mismatch, got nil")
+	}
+
+	ce, ok := err.(*ConflictError)
+	if !ok {
+		t.Fatalf("expected *ConflictError, got %T: %v", err, err)
+	}
+	if ce.TargetPath != ".bashrc" {
+		t.Errorf("TargetPath = %q, want %q", ce.TargetPath, ".bashrc")
+	}
+}
+
 func TestDetectConflicts_DirectoryVsDirectoryMismatch(t *testing.T) {
-	// Specifically test that directory entries (not just files) trigger conflicts
-	// when they disagree on attributes.
+	setConflictTestEnv(t)
 	homeDir := t.TempDir()
 
 	r1 := setupRecipe(t, "alacritty", map[string]string{

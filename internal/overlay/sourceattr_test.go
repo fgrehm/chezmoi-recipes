@@ -3,6 +3,10 @@ package overlay
 import "testing"
 
 func TestParseDirTargetName(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
 	tests := []struct {
 		name   string
 		input  string
@@ -32,6 +36,10 @@ func TestParseDirTargetName(t *testing.T) {
 }
 
 func TestParseFileTargetName(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
 	tests := []struct {
 		name   string
 		input  string
@@ -71,6 +79,10 @@ func TestParseFileTargetName(t *testing.T) {
 }
 
 func TestParseTargetPath(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
 	tests := []struct {
 		name   string
 		input  string

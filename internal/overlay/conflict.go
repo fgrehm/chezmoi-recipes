@@ -15,6 +15,7 @@ import (
 type SourceEntry struct {
 	Owner      string // "home" or recipe name
 	SourcePath string // source-relative path, e.g. "private_dot_config/nvim/init.lua"
+	IsDir      bool
 }
 
 // ConflictError indicates two sources map to the same chezmoi target path.
@@ -80,8 +81,11 @@ func DetectConflicts(homeDir string, recipes []*recipe.Recipe) error {
 // their target paths, and checks for conflicts against the seen map.
 // seen is updated in place. Returns a *ConflictError on the first conflict.
 func scanSource(root, owner string, seen map[string]SourceEntry) error {
-	if _, err := os.Stat(root); errors.Is(err, os.ErrNotExist) {
-		return nil
+	if _, err := os.Stat(root); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return fmt.Errorf("stat %q: %w", root, err)
 	}
 
 	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
@@ -103,12 +107,15 @@ func scanSource(root, owner string, seen map[string]SourceEntry) error {
 		}
 
 		targetPath := ParseTargetPath(relPath, d.IsDir())
-		current := SourceEntry{Owner: owner, SourcePath: relPath}
+		current := SourceEntry{Owner: owner, SourcePath: relPath, IsDir: d.IsDir()}
 		existing, found := seen[targetPath]
 
 		if found {
 			conflict := false
-			if d.IsDir() {
+			if existing.IsDir != d.IsDir() {
+				// File vs directory collision for the same target.
+				conflict = true
+			} else if d.IsDir() {
 				// Directories: multiple recipes can share a parent dir (e.g.
 				// .config) as long as they agree on attributes (same source
 				// name). Different source names = attribute conflict.
@@ -123,9 +130,10 @@ func scanSource(root, owner string, seen map[string]SourceEntry) error {
 				// caught before descending further.
 				conflict = filepath.Base(existing.SourcePath) != filepath.Base(relPath)
 			} else {
-				// Files: same target from different owners always conflicts,
-				// regardless of whether the source names match.
-				conflict = existing.Owner != owner
+				// Files: same target always conflicts unless it is the same
+				// source path from the same owner (which means the walk
+				// revisited the entry, not a real collision).
+				conflict = existing.Owner != owner || existing.SourcePath != relPath
 			}
 			if conflict {
 				return &ConflictError{
