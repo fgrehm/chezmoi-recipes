@@ -1,6 +1,7 @@
-.PHONY: build test test-e2e vet fmt lint install help
+.PHONY: build test test-e2e vet fmt lint install check-versions help
 
-INSTALL_DIR ?= $(HOME)/.local/bin
+INSTALL_DIR  ?= $(HOME)/.local/bin
+RECIPES_DIR  ?= ./recipes
 
 VERSION ?= dev
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
@@ -33,3 +34,6 @@ fmt: ## format source with gofmt
 
 lint: ## run golangci-lint
 	golangci-lint run ./...
+
+check-versions: ## report stale pinned versions in .chezmoiexternals/*.toml files
+	@./scripts/check-versions.sh $(RECIPES_DIR)
