@@ -4,7 +4,7 @@
 
 ### Features
 
-- `make check-versions` reports stale pinned versions in `.chezmoiexternals/*.toml` files by comparing against the GitHub releases API. Supports `GITHUB_TOKEN` for rate-limit avoidance and exits non-zero when updates are available (CI-friendly).
+- `make check-versions` reports stale pinned versions in `.chezmoiexternals/*.toml` files and shell scripts with `VERSION="x.y.z"` against the GitHub releases API. Also flags unpinned `/latest/download/` URLs. Auth: `gh` CLI, `GITHUB_TOKEN`, or unauthenticated curl. Exits non-zero when updates are available (CI-friendly).
 
 ### Docs
 
