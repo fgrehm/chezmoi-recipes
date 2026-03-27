@@ -60,6 +60,6 @@ Document how to use chezmoi's built-in `chezmoi docker run` / `chezmoi docker ex
 
 See: https://www.chezmoi.io/reference/commands/docker/
 
-## `.chezmoiexternal` support in recipes
+## `.chezmoiexternal.toml` fragment merging
 
-Allow recipes to include `.chezmoiexternal.toml` fragments that get merged into a single `.chezmoiexternal.toml` in `compiled-home/`, similar to how `.chezmoiignore` is merged today.
+Recipes already support per-recipe `.chezmoiexternals/*.toml` files (one file per tool, no conflicts). A possible extension: allow recipes to contribute entries to a single merged `.chezmoiexternal.toml` in `compiled-home/`, similar to how `.chezmoiignore` is merged today. This would support use cases where a recipe needs to declare externals that share a table (e.g., multiple files from the same archive). Low priority since the per-file `.chezmoiexternals/` pattern covers most cases.

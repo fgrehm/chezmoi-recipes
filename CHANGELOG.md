@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Features
+
+- `make check-versions` reports stale pinned versions in `.chezmoiexternals/*.toml` files and shell scripts with `VERSION="x.y.z"` against the GitHub releases API. Also flags unpinned `/latest/download/` URLs. Auth: `gh` CLI, `GITHUB_TOKEN`, or unauthenticated curl. Exits non-zero when updates are available (CI-friendly).
+
+### Docs
+
+- Rewrite "Binary from GitHub releases" section in recipe authoring guide: version pinning is now the primary recommendation with explicit warning against `gitHubLatest*` template functions, new subsections for arch translation schemes (GOARCH vs GNU/uname), version-prefixed archives, and direct binary downloads (`type = "file"`).
+- Add vim modeline placement gotcha to common pitfalls.
+- Add `zellij` example recipe demonstrating the `.chezmoiexternals/` pattern.
+- Clarify `.chezmoiexternal.toml` fragment merging in roadmap.
+
 ## [v0.5.0] - 2026-03-24
 
 ### Features

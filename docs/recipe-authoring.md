@@ -203,32 +203,72 @@ Use chezmoi's [`.chezmoiexternals/`](https://www.chezmoi.io/reference/special-di
 
 Each file in `.chezmoiexternals/` is always rendered as a template (no `.tmpl` extension needed), so chezmoi template functions work directly.
 
+**Always pin the version explicitly** using a `$version` variable at the top of the file. This makes installs reproducible and the version string is an obvious bump target (see `make check-versions`):
+
 ```toml
 # chezmoi/.chezmoiexternals/diffnav.toml
+{{- $version := "0.7.2" -}}
 {{- $arch := .chezmoi.arch -}}
 {{- if eq $arch "amd64" -}}{{- $arch = "x86_64" -}}{{- end -}}
 [".local/bin/diffnav"]
   type = "archive-file"
-  url = "https://github.com/dlvhdr/diffnav/releases/latest/download/diffnav_Linux_{{ $arch }}.tar.gz"
+  url = "https://github.com/dlvhdr/diffnav/releases/download/v{{ $version }}/diffnav_Linux_{{ $arch }}.tar.gz"
   executable = true
   path = "diffnav"
 ```
 
-Prefer direct `/releases/latest/download/` URLs over `gitHubLatestReleaseAssetURL`: GitHub redirects these without an API call, so template rendering works offline and in rate-limited environments (e.g., CI). Use `{{ $arch }}` interpolation directly inside the TOML string — chezmoi renders the template before parsing the TOML.
+Do not use `gitHubLatestReleaseAssetURL` or `gitHubLatestRelease`. These make GitHub API calls at template render time, causing rate-limit failures in CI and unit tests (even with `--exclude=externals`). Pinned `/releases/download/<version>/` URLs avoid the API entirely.
 
-If the archive has a version-prefixed top-level directory (common in Rust/Go releases), pin the version explicitly rather than using `gitHubLatestRelease`:
+#### Arch translation
+
+Two naming schemes appear in the wild:
+
+- **GOARCH style** (`amd64`/`arm64`): used by Go-built tools. `.chezmoi.arch` passes through directly, no translation needed.
+- **GNU/uname style** (`x86_64`/`aarch64`): used by Rust/C tools. Requires translation:
+
+```
+{{- $arch := .chezmoi.arch -}}
+{{- if eq $arch "amd64" -}}{{- $arch = "x86_64" -}}{{- else if eq $arch "arm64" -}}{{- $arch = "aarch64" -}}{{- end -}}
+```
+
+Check the project's release filenames to determine which scheme it uses.
+
+#### Archive with version-prefixed directory
+
+When the archive has a version-prefixed top-level directory (common in Rust/Go releases), use `$version` in the `path` field to match:
 
 ```toml
 # chezmoi/.chezmoiexternals/delta.toml
+{{- $version := "0.19.1" -}}
 {{- $arch := .chezmoi.arch -}}
 {{- if eq $arch "amd64" -}}{{- $arch = "x86_64" -}}{{- else if eq $arch "arm64" -}}{{- $arch = "aarch64" -}}{{- end -}}
-{{- $version := "0.19.1" -}}
 [".local/bin/delta"]
   type = "archive-file"
   url = "https://github.com/dandavison/delta/releases/download/{{ $version }}/delta-{{ $version }}-{{ $arch }}-unknown-linux-gnu.tar.gz"
   path = "delta-{{ $version }}-{{ $arch }}-unknown-linux-gnu/delta"
   executable = true
 ```
+
+#### Direct binary download (no archive)
+
+Some tools release a pre-built binary rather than an archive. Use `type = "file"` instead of `type = "archive-file"`:
+
+```toml
+# chezmoi/.chezmoiexternals/ttyd.toml
+{{- $version := "1.7.7" -}}
+{{- $arch := .chezmoi.arch -}}
+{{- if eq $arch "amd64" -}}{{- $arch = "x86_64" -}}{{- else if eq $arch "arm64" -}}{{- $arch = "aarch64" -}}{{- end -}}
+[".local/bin/ttyd"]
+  type = "file"
+  url = "https://github.com/tsl0922/ttyd/releases/download/{{ $version }}/ttyd.{{ $arch }}"
+  executable = true
+```
+
+#### Tag prefix convention
+
+Some projects tag releases as `v1.2.3`, others use `1.2.3`. Either include the `v` literally in the URL (e.g., `download/v{{ $version }}/` with `$version := "1.2.3"`) or include it in the version variable itself (e.g., `$version := "v1.2.3"` with `download/{{ $version }}/`). Check the repository's GitHub releases page and match the pattern it uses.
+
+#### Multiple recipes, no conflicts
 
 Multiple recipes can each have their own `.chezmoiexternals/*.toml` files. Since each file has a unique name (the tool name), there are no overlay conflicts.
 
@@ -418,6 +458,18 @@ wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install
 Use this pattern when other files in the recipe (or other recipes) depend on the tool being present. The graceful `_install()` pattern is for tools where failure is inconvenient but not breaking.
 
 ## Common pitfalls
+
+### Vim modeline must go at the bottom of `.chezmoiexternals/*.toml`
+
+Adding `# vim: ft=toml.gotmpl` as the first line of a `.chezmoiexternals/*.toml` file breaks chezmoi silently. The `{{- $version := "..." -}}` trim markers eat the newlines before and after the action, merging the modeline comment with the table header onto a single line:
+
+```
+# vim: ft=toml.gotmpl[".local/bin/clotilde"]
+```
+
+TOML treats the entire line as a comment, so the table definition is dropped. chezmoi then fails with: `type mismatch for chezmoi.External: expected table but found string`.
+
+Put the modeline on the last line instead. Vim reads modelines from the last few lines too (controlled by the `modelines` option, default 5).
 
 ### `dot_config` and `private_dot_config` cannot coexist for the same target
 
