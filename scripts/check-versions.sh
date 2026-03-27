@@ -22,7 +22,6 @@ recipes_dir="${1:-.}"
 
 # Determine fetch strategy once at startup (prefer wget, fallback to curl)
 fetch_mode=""
-auth_header=()
 
 if command -v gh &>/dev/null && gh auth status &>/dev/null; then
   fetch_mode="gh"
@@ -79,7 +78,7 @@ check_version() {
   check_count=$((check_count + 1))
 
   local latest
-  latest=$(fetch_latest "$repo")
+  latest=$(fetch_latest "$repo" || true)
 
   if [[ -z "$latest" ]]; then
     printf "  %-20s  %-12s  %-12s  %s\n" "$tool" "$pinned" "?" "ERROR: could not fetch latest from $repo"
@@ -88,8 +87,9 @@ check_version() {
   fi
 
   local latest_clean="${latest#v}"
+  local pinned_clean="${pinned#v}"
 
-  if [[ "$pinned" == "$latest_clean" ]]; then
+  if [[ "$pinned_clean" == "$latest_clean" ]]; then
     printf "  %-20s  %-12s  %-12s  %s\n" "$tool" "$pinned" "$latest_clean" "up to date"
   else
     printf "  %-20s  %-12s  %-12s  %s\n" "$tool" "$pinned" "$latest_clean" "UPDATE AVAILABLE"
@@ -100,7 +100,7 @@ check_version() {
 # --- .chezmoiexternals/*.toml with pinned $version ---
 
 while IFS= read -r toml_file; do
-  pinned=$(grep -oP '\$version\s*:=\s*"\K[^"]+' "$toml_file" 2>/dev/null || true)
+  pinned=$(grep -oP '\$version\s*:=\s*"\K[^"]+' "$toml_file" 2>/dev/null | head -1 || true)
   repo=$(grep -oP 'github\.com/\K[^/]+/[^/]+' "$toml_file" 2>/dev/null | head -1 || true)
   tool=$(basename "$toml_file" .toml)
 
@@ -108,7 +108,7 @@ while IFS= read -r toml_file; do
     check_version "$tool" "$pinned" "$repo"
   elif [[ -z "$pinned" && -n "$repo" ]] && grep -q 'releases/latest/download/' "$toml_file"; then
     # No $version variable and uses /releases/latest/download/ URL
-    latest=$(fetch_latest "$repo")
+    latest=$(fetch_latest "$repo" || true)
     latest_clean="${latest#v}"
     printf "  %-20s  %-12s  %-12s  %s\n" "$tool" "(latest)" "${latest_clean:--}" "not pinned"
     unpinned_count=$((unpinned_count + 1))
