@@ -36,4 +36,4 @@ lint: ## run golangci-lint
 	golangci-lint run ./...
 
 check-versions: ## report stale pinned versions in .chezmoiexternals/*.toml and .chezmoiscripts/*.sh files
-	@./scripts/check-versions.sh $(RECIPES_DIR)
+	@./scripts/check-versions.sh "$(RECIPES_DIR)"

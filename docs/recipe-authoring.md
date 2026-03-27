@@ -264,6 +264,10 @@ Some tools release a pre-built binary rather than an archive. Use `type = "file"
   executable = true
 ```
 
+#### Tag prefix convention
+
+Some projects tag releases as `v1.2.3`, others use `1.2.3`. Either include the `v` literally in the URL (e.g., `download/v{{ $version }}/` with `$version := "1.2.3"`) or include it in the version variable itself (e.g., `$version := "v1.2.3"` with `download/{{ $version }}/`). Check the repository's GitHub releases page and match the pattern it uses.
+
 #### Multiple recipes, no conflicts
 
 Multiple recipes can each have their own `.chezmoiexternals/*.toml` files. Since each file has a unique name (the tool name), there are no overlay conflicts.
