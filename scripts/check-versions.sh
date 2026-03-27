@@ -5,15 +5,24 @@
 # Reads {{- $version := "x.y.z" -}} patterns from .toml files, extracts the
 # GitHub owner/repo from the URL, and compares against the latest release tag.
 #
-# Requires: curl, grep
-# Respects: GITHUB_TOKEN (optional, avoids rate limits)
+# Auth (checked in order):
+#   1. gh CLI (if installed and authenticated)
+#   2. GITHUB_TOKEN env var (for CI)
+#   3. Unauthenticated curl (60 req/hour rate limit)
+#
+# Requires: curl, grep (gh optional)
 
 set -euo pipefail
 
 recipes_dir="${1:-.}"
 
+# Determine fetch strategy once at startup
+fetch_mode="curl"
 auth_header=()
-if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+
+if command -v gh &>/dev/null && gh auth status &>/dev/null; then
+  fetch_mode="gh"
+elif [[ -n "${GITHUB_TOKEN:-}" ]]; then
   auth_header=(-H "Authorization: token $GITHUB_TOKEN")
 fi
 
@@ -38,9 +47,13 @@ while read -r toml_file; do
   check_count=$((check_count + 1))
 
   # Fetch latest release tag
-  latest=$(curl -fsSL "${auth_header[@]}" \
-    "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null \
-    | grep -oP '"tag_name"\s*:\s*"\K[^"]+' || true)
+  if [[ "$fetch_mode" == "gh" ]]; then
+    latest=$(gh api "repos/$repo/releases/latest" --jq '.tag_name' 2>/dev/null || true)
+  else
+    latest=$(curl -fsSL "${auth_header[@]}" \
+      "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null \
+      | grep -oP '"tag_name"\s*:\s*"\K[^"]+' || true)
+  fi
 
   if [[ -z "$latest" ]]; then
     printf "  %-20s  %-12s  %-12s  %s\n" "$tool" "$pinned" "?" "ERROR: could not fetch latest from $repo"
