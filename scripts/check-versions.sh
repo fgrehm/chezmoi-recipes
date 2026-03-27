@@ -67,7 +67,9 @@ fetch_latest() {
     return 1
   fi
 
-  latest_cache["$repo"]="$tag"
+  if [[ -n "$tag" ]]; then
+    latest_cache["$repo"]="$tag"
+  fi
   echo "$tag"
 }
 
@@ -110,7 +112,7 @@ while IFS= read -r toml_file; do
     # No $version variable and uses /releases/latest/download/ URL
     latest=$(fetch_latest "$repo" || true)
     latest_clean="${latest#v}"
-    printf "  %-20s  %-12s  %-12s  %s\n" "$tool" "(latest)" "${latest_clean:--}" "not pinned"
+    printf "  %-20s  %-12s  %-12s  %s\n" "$tool" "(latest)" "${latest_clean:-"-"}" "not pinned"
     unpinned_count=$((unpinned_count + 1))
   fi
 done < <(find "$recipes_dir" -path '*/.chezmoiexternals/*.toml' -type f | sort)
