@@ -96,7 +96,7 @@ func detectRepoURL(ctx context.Context, repoRoot string) (string, error) {
 			}
 			return "", fmt.Errorf("git remote get-url origin: %w", err)
 		}
-		return "", err
+		return "", fmt.Errorf("git remote get-url origin: %w", err)
 	}
 	return strings.TrimSpace(string(out)), nil
 }
