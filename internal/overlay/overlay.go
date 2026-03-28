@@ -122,7 +122,6 @@ func Plan(_ context.Context, r *recipe.Recipe, sourceDir string, store *state.St
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}

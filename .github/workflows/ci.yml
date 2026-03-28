@@ -1,4 +1,9 @@
 name: CI
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -9,21 +14,50 @@ permissions:
 
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - run: go vet ./...
-      - run: go test -race ./...
-      - run: go build ./cmd/chezmoi-recipes
+      - run: make test
+      - run: make build
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: make lint
+      - name: Check formatting
+        run: |
+          go tool golangci-lint fmt ./...
+          git diff --exit-code
+      - run: make deadcode
+      - name: Complexity gate (gocyclo -over 30)
+        run: |
+          out=$(go tool gocyclo -over 30 -ignore '_test\.go$' . || true)
+          if [ -n "$out" ]; then
+            echo "Functions exceeding complexity threshold of 30:"
+            echo "$out"
+            exit 1
+          fi
+      - name: govulncheck
+        run: go tool govulncheck ./...
 
   e2e:
+    name: E2E
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - name: Install bats
@@ -32,6 +66,7 @@ jobs:
           sudo /tmp/bats-core/install.sh /usr/local
       - name: Install chezmoi
         run: sh -c "$(curl -fsSL https://get.chezmoi.io)" -- -b "$HOME/.local/bin" && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: make build
       - run: make test-e2e
         env:
           CHEZMOI_RECIPES_E2E: "1"

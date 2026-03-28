@@ -40,10 +40,6 @@ func compiledHomeDir() string {
 	return paths.CompiledHomeDir(repoRoot())
 }
 
-func Execute() error {
-	return rootCmd.Execute()
-}
-
 // ExecuteContext runs the root command with the given context, allowing
 // callers to propagate cancellation (e.g. from SIGINT).
 func ExecuteContext(ctx context.Context) error {

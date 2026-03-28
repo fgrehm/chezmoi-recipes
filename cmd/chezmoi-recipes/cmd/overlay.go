@@ -284,7 +284,6 @@ func printRecipeResult(w io.Writer, name string, result *overlay.Result, index, 
 	}
 }
 
-
 // printSummary prints the final summary line after all overlays.
 func printSummary(w io.Writer, recipeCount, added, updated, removed int) {
 	parts := []string{

@@ -85,7 +85,7 @@ func readTemplateData(chezmoiConfigFile string) (map[string]any, error) {
 // Blank lines and lines starting with # are skipped. Whitespace is trimmed.
 func parseLines(s string) map[string]bool {
 	result := make(map[string]bool)
-	for _, line := range strings.Split(s, "\n") {
+	for line := range strings.SplitSeq(s, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
