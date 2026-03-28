@@ -90,7 +90,11 @@ func detectRepoURL(ctx context.Context, repoRoot string) (string, error) {
 	if err != nil {
 		exitErr := &exec.ExitError{}
 		if errors.As(err, &exitErr) {
-			return "", fmt.Errorf("%s", strings.TrimSpace(string(exitErr.Stderr)))
+			stderr := strings.TrimSpace(string(exitErr.Stderr))
+			if stderr != "" {
+				return "", fmt.Errorf("%s", stderr)
+			}
+			return "", fmt.Errorf("git remote get-url origin: %w", err)
 		}
 		return "", err
 	}
