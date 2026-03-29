@@ -49,7 +49,7 @@ jobs:
             exit 1
           fi
       - name: govulncheck
-        run: go tool govulncheck ./...
+        run: make govulncheck
 
   e2e:
     name: E2E
