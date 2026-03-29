@@ -17,7 +17,10 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Printf("chezmoi-recipes %s (commit: %s, built: %s, go: %s)\n", version, commit, date, runtime.Version())
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "chezmoi-recipes version %s\n", version)
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  commit: %s\n", commit)
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  built:  %s\n", date)
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  go:     %s\n", runtime.Version())
 		return nil
 	},
 }
