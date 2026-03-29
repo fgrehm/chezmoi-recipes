@@ -17,11 +17,12 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "chezmoi-recipes version %s\n", version)
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  commit: %s\n", commit)
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  built:  %s\n", date)
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  go:     %s\n", runtime.Version())
-		return nil
+		w := cmd.OutOrStdout()
+		_, err := fmt.Fprintf(w,
+			"chezmoi-recipes version %s\n  commit: %s\n  built:  %s\n  go:     %s\n",
+			version, commit, date, runtime.Version(),
+		)
+		return err
 	},
 }
 

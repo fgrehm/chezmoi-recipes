@@ -171,7 +171,7 @@ func generateInstallScript(repoURL, recipesRelDir string) string {
 }
 
 // shellEscapeSingleQuoted escapes s for embedding inside single quotes in
-// shell by replacing each ' with '\”.
+// shell by ending the string, inserting an escaped quote, and reopening.
 func shellEscapeSingleQuoted(s string) string {
 	return strings.ReplaceAll(s, "'", `'\''`)
 }

@@ -62,7 +62,7 @@ govulncheck: ## run vulnerability check
 
 audit: ## run complexity and vulnerability checks (informational)
 	@echo "=== Cyclomatic complexity (>15) ==="
-	@go tool gocyclo -over 15 . || true
+	@go tool gocyclo -over 15 -ignore 'vendor/' . || true
 	@echo ""
 	@echo "=== Vulnerability check ==="
 	@go tool govulncheck ./... || true
