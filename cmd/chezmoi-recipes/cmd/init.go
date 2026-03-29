@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
@@ -87,10 +88,15 @@ func detectRepoURL(ctx context.Context, repoRoot string) (string, error) {
 	cmd := exec.CommandContext(ctx, "git", "-C", repoRoot, "remote", "get-url", "origin")
 	out, err := cmd.Output()
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok && len(exitErr.Stderr) > 0 {
-			return "", fmt.Errorf("%s", strings.TrimSpace(string(exitErr.Stderr)))
+		exitErr := &exec.ExitError{}
+		if errors.As(err, &exitErr) {
+			stderr := strings.TrimSpace(string(exitErr.Stderr))
+			if stderr != "" {
+				return "", fmt.Errorf("%s", stderr)
+			}
+			return "", fmt.Errorf("git remote get-url origin: %w", err)
 		}
-		return "", err
+		return "", fmt.Errorf("git remote get-url origin: %w", err)
 	}
 	return strings.TrimSpace(string(out)), nil
 }

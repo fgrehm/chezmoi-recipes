@@ -53,7 +53,6 @@ func TestSaveAndLoad_Roundtrip(t *testing.T) {
 	}
 }
 
-
 func TestRecordRecipe_Overwrites(t *testing.T) {
 	s := &Store{Recipes: make(map[string]*RecipeState)}
 
@@ -75,8 +74,8 @@ func TestAllFiles(t *testing.T) {
 
 	got := s.AllFiles()
 	want := map[string]string{
-		"dot_gitconfig":                                  "git",
-		"dot_config/git/ignore":                          "git",
+		"dot_gitconfig":                               "git",
+		"dot_config/git/ignore":                       "git",
 		".chezmoiscripts/run_once_install-ripgrep.sh": "ripgrep",
 	}
 

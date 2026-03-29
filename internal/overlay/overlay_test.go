@@ -2,6 +2,7 @@ package overlay
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,7 +49,7 @@ func TestPlan_CleanOverlay(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 
 	r := setupRecipe(t, "git", map[string]string{
-		"dot_gitconfig":      "[init]\n    defaultBranch = main\n",
+		"dot_gitconfig":         "[init]\n    defaultBranch = main\n",
 		"dot_config/git/ignore": ".DS_Store\n",
 	})
 	sourceDir := t.TempDir()
@@ -117,7 +118,8 @@ func TestPlan_ConflictWithOtherRecipe(t *testing.T) {
 		t.Fatal("Plan() should fail with conflict error")
 	}
 
-	ownerErr, ok := err.(*OwnershipError)
+	ownerErr := &OwnershipError{}
+	ok := errors.As(err, &ownerErr)
 	if !ok {
 		t.Fatalf("expected *OwnershipError, got %T: %v", err, err)
 	}
@@ -149,7 +151,8 @@ func TestPlan_ConflictWithUntrackedFile(t *testing.T) {
 		t.Fatal("Plan() should fail with conflict error for untracked file")
 	}
 
-	ownerErr, ok := err.(*OwnershipError)
+	ownerErr := &OwnershipError{}
+	ok := errors.As(err, &ownerErr)
 	if !ok {
 		t.Fatalf("expected *OwnershipError, got %T: %v", err, err)
 	}
@@ -177,7 +180,7 @@ func TestExecute_CopiesFiles(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 
 	r := setupRecipe(t, "git", map[string]string{
-		"dot_gitconfig":      "[init]\n    defaultBranch = main\n",
+		"dot_gitconfig":         "[init]\n    defaultBranch = main\n",
 		"dot_config/git/ignore": ".DS_Store\n",
 	})
 	sourceDir := t.TempDir()
@@ -320,7 +323,7 @@ func TestPlan_SkipsChezmoiignore(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 
 	r := setupRecipe(t, "alacritty", map[string]string{
-		".chezmoiignore":                              "{{ if .isContainer }}\nprivate_dot_config/alacritty/\n{{ end }}\n",
+		".chezmoiignore": "{{ if .isContainer }}\nprivate_dot_config/alacritty/\n{{ end }}\n",
 		"private_dot_config/alacritty/alacritty.toml": "font_size = 12\n",
 	})
 	sourceDir := t.TempDir()
@@ -348,7 +351,7 @@ func TestExecute_DoesNotCopyChezmoiignore(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 
 	r := setupRecipe(t, "alacritty", map[string]string{
-		".chezmoiignore":                              "private_dot_config/alacritty/\n",
+		".chezmoiignore": "private_dot_config/alacritty/\n",
 		"private_dot_config/alacritty/alacritty.toml": "font_size = 12\n",
 	})
 	sourceDir := t.TempDir()
@@ -376,7 +379,7 @@ func TestReadIgnoreEntries_ReturnsContentWhenPresent(t *testing.T) {
 
 	want := "{{ if .isContainer }}\nprivate_dot_config/alacritty/\n{{ end }}\n"
 	r := setupRecipe(t, "alacritty", map[string]string{
-		".chezmoiignore":                              want,
+		".chezmoiignore": want,
 		"private_dot_config/alacritty/alacritty.toml": "font_size = 12\n",
 	})
 

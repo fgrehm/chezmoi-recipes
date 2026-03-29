@@ -65,8 +65,8 @@ func TestBuildChezmoiIgnore_TemplateSyntaxPreserved(t *testing.T) {
 
 func TestBuildChezmoiIgnore_EmptyRecipeContentSkipped(t *testing.T) {
 	entries := map[string]string{
-		"alacritty": "has content\n",
-		"empty":     "",
+		"alacritty":  "has content\n",
+		"empty":      "",
 		"whitespace": "\n\n",
 	}
 	result := BuildChezmoiIgnore(nil, entries)

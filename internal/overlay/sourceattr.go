@@ -77,8 +77,8 @@ func ParseDirTargetName(name string) string {
 func ParseFileTargetName(name string) string {
 	// Strip type prefix first (mutually exclusive).
 	for _, prefix := range fileTypePrefixes {
-		if strings.HasPrefix(name, prefix) {
-			name = strings.TrimPrefix(name, prefix)
+		if after, ok := strings.CutPrefix(name, prefix); ok {
+			name = after
 			break
 		}
 	}
@@ -110,7 +110,7 @@ func ParseTargetPath(sourceRelPath string, isDir bool) string {
 	var targetDirs []string
 	if dir != "" {
 		dir = strings.TrimSuffix(dir, string(filepath.Separator))
-		for _, component := range strings.Split(dir, string(filepath.Separator)) {
+		for component := range strings.SplitSeq(dir, string(filepath.Separator)) {
 			targetDirs = append(targetDirs, ParseDirTargetName(component))
 		}
 	}
@@ -132,11 +132,11 @@ func ParseTargetPath(sourceRelPath string, isDir bool) string {
 // is returned verbatim (no dot_ conversion). Otherwise, "dot_" is converted
 // to a leading ".".
 func resolveLiteralOrDot(name string) string {
-	if strings.HasPrefix(name, "literal_") {
-		return strings.TrimPrefix(name, "literal_")
+	if after, ok := strings.CutPrefix(name, "literal_"); ok {
+		return after
 	}
-	if strings.HasPrefix(name, "dot_") {
-		return "." + strings.TrimPrefix(name, "dot_")
+	if after, ok := strings.CutPrefix(name, "dot_"); ok {
+		return "." + after
 	}
 	return name
 }

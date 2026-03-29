@@ -1,6 +1,7 @@
 package overlay
 
 import (
+	"errors"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -43,7 +44,8 @@ func TestDetectConflicts_HomeRecipeSameFile(t *testing.T) {
 		t.Fatal("expected conflict error, got nil")
 	}
 
-	ce, ok := err.(*ConflictError)
+	ce := &ConflictError{}
+	ok := errors.As(err, &ce)
 	if !ok {
 		t.Fatalf("expected *ConflictError, got %T: %v", err, err)
 	}
@@ -75,7 +77,8 @@ func TestDetectConflicts_HomeRecipeAttributeMismatch(t *testing.T) {
 		t.Fatal("expected conflict error for attribute mismatch, got nil")
 	}
 
-	ce, ok := err.(*ConflictError)
+	ce := &ConflictError{}
+	ok := errors.As(err, &ce)
 	if !ok {
 		t.Fatalf("expected *ConflictError, got %T: %v", err, err)
 	}
@@ -101,7 +104,8 @@ func TestDetectConflicts_RecipeVsRecipeAttributeMismatch(t *testing.T) {
 		t.Fatal("expected conflict error for dir attribute mismatch between recipes, got nil")
 	}
 
-	ce, ok := err.(*ConflictError)
+	ce := &ConflictError{}
+	ok := errors.As(err, &ce)
 	if !ok {
 		t.Fatalf("expected *ConflictError, got %T: %v", err, err)
 	}
@@ -133,7 +137,8 @@ func TestDetectConflicts_RecipeVsRecipeSameFile(t *testing.T) {
 		t.Fatal("expected conflict error, got nil")
 	}
 
-	ce, ok := err.(*ConflictError)
+	ce := &ConflictError{}
+	ok := errors.As(err, &ce)
 	if !ok {
 		t.Fatalf("expected *ConflictError, got %T: %v", err, err)
 	}
@@ -156,7 +161,8 @@ func TestDetectConflicts_NestedConflict(t *testing.T) {
 		t.Fatal("expected conflict error for nested file, got nil")
 	}
 
-	ce, ok := err.(*ConflictError)
+	ce := &ConflictError{}
+	ok := errors.As(err, &ce)
 	if !ok {
 		t.Fatalf("expected *ConflictError, got %T: %v", err, err)
 	}
@@ -211,7 +217,7 @@ func TestDetectConflicts_SameRecipeOwnerNoConflict(t *testing.T) {
 	homeDir := t.TempDir()
 
 	r := setupRecipe(t, "neovim", map[string]string{
-		filepath.Join("private_dot_config", "nvim", "init.lua"):        "lua",
+		filepath.Join("private_dot_config", "nvim", "init.lua"):       "lua",
 		filepath.Join("private_dot_config", "nvim", "lazy-lock.json"): "{}",
 	})
 
@@ -236,7 +242,8 @@ func TestDetectConflicts_SameOwnerAttributeMismatch(t *testing.T) {
 		t.Fatal("expected conflict for same-owner attribute mismatch, got nil")
 	}
 
-	ce, ok := err.(*ConflictError)
+	ce := &ConflictError{}
+	ok := errors.As(err, &ce)
 	if !ok {
 		t.Fatalf("expected *ConflictError, got %T: %v", err, err)
 	}
@@ -261,7 +268,8 @@ func TestDetectConflicts_DirectoryVsDirectoryMismatch(t *testing.T) {
 		t.Fatal("expected conflict for exact_dot_config vs private_dot_config")
 	}
 
-	ce, ok := err.(*ConflictError)
+	ce := &ConflictError{}
+	ok := errors.As(err, &ce)
 	if !ok {
 		t.Fatalf("expected *ConflictError, got %T: %v", err, err)
 	}

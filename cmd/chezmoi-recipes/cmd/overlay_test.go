@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -174,7 +175,8 @@ func TestRunOverlay_ConflictOnSecondRecipe_StopsNoStateSaved(t *testing.T) {
 		t.Fatal("expected conflict error")
 	}
 
-	if _, ok := err.(*overlay.ConflictError); !ok {
+	conflictError := &overlay.ConflictError{}
+	if !errors.As(err, &conflictError) {
 		t.Errorf("expected *overlay.ConflictError, got %T: %v", err, err)
 	}
 
@@ -746,7 +748,8 @@ func TestRunOverlay_HomeRecipeConflict(t *testing.T) {
 		t.Fatal("expected home/recipe conflict error")
 	}
 
-	ce, ok := err.(*overlay.ConflictError)
+	ce := &overlay.ConflictError{}
+	ok := errors.As(err, &ce)
 	if !ok {
 		t.Fatalf("expected *overlay.ConflictError, got %T: %v", err, err)
 	}
@@ -846,7 +849,7 @@ func TestRunOverlay_ChezmoiignoreMerged(t *testing.T) {
 	stateFile := filepath.Join(t.TempDir(), "state.json")
 
 	setupTestRecipe(t, recipesDir, "alacritty", map[string]string{
-		".chezmoiignore":                              "{{ if .isContainer }}\nprivate_dot_config/alacritty/\n{{ end }}\n",
+		".chezmoiignore": "{{ if .isContainer }}\nprivate_dot_config/alacritty/\n{{ end }}\n",
 		"private_dot_config/alacritty/alacritty.toml": "font_size = 12\n",
 	})
 
@@ -881,11 +884,11 @@ func TestRunOverlay_ChezmoiignoreMultipleRecipesMerged(t *testing.T) {
 	stateFile := filepath.Join(t.TempDir(), "state.json")
 
 	setupTestRecipe(t, recipesDir, "alacritty", map[string]string{
-		".chezmoiignore":                              "{{ if .isContainer }}\nprivate_dot_config/alacritty/\n{{ end }}\n",
+		".chezmoiignore": "{{ if .isContainer }}\nprivate_dot_config/alacritty/\n{{ end }}\n",
 		"private_dot_config/alacritty/alacritty.toml": "font_size = 12\n",
 	})
 	setupTestRecipe(t, recipesDir, "cartage", map[string]string{
-		".chezmoiignore":                                  "{{ if .isContainer }}\nprivate_dot_config/systemd/\n{{ end }}\n",
+		".chezmoiignore": "{{ if .isContainer }}\nprivate_dot_config/systemd/\n{{ end }}\n",
 		"private_dot_config/systemd/user/cartage.service": "service\n",
 	})
 
@@ -923,7 +926,7 @@ func TestRunOverlay_ChezmoiignoreDryRunDoesNotWrite(t *testing.T) {
 	stateFile := filepath.Join(t.TempDir(), "state.json")
 
 	setupTestRecipe(t, recipesDir, "alacritty", map[string]string{
-		".chezmoiignore":                              "private_dot_config/alacritty/\n",
+		".chezmoiignore": "private_dot_config/alacritty/\n",
 		"private_dot_config/alacritty/alacritty.toml": "font_size = 12\n",
 	})
 
@@ -951,7 +954,7 @@ func TestRunOverlay_ChezmoiignoreNotInState(t *testing.T) {
 	stateFile := filepath.Join(t.TempDir(), "state.json")
 
 	setupTestRecipe(t, recipesDir, "alacritty", map[string]string{
-		".chezmoiignore":                              "private_dot_config/alacritty/\n",
+		".chezmoiignore": "private_dot_config/alacritty/\n",
 		"private_dot_config/alacritty/alacritty.toml": "font_size = 12\n",
 	})
 

@@ -111,11 +111,12 @@ func scanSource(root, owner string, seen map[string]SourceEntry) error {
 		existing, found := seen[targetPath]
 
 		if found {
-			conflict := false
-			if existing.IsDir != d.IsDir() {
+			var conflict bool
+			switch {
+			case existing.IsDir != d.IsDir():
 				// File vs directory collision for the same target.
 				conflict = true
-			} else if d.IsDir() {
+			case d.IsDir():
 				// Directories: multiple recipes can share a parent dir (e.g.
 				// .config) as long as they agree on attributes (same source
 				// name). Different source names = attribute conflict.
@@ -129,7 +130,7 @@ func scanSource(root, owner string, seen map[string]SourceEntry) error {
 				// visited before children, so a mismatch at any level is
 				// caught before descending further.
 				conflict = filepath.Base(existing.SourcePath) != filepath.Base(relPath)
-			} else {
+			default:
 				// Files: same target always conflicts unless it is the same
 				// source path from the same owner (which means the walk
 				// revisited the entry, not a real collision).

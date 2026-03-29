@@ -1,12 +1,25 @@
 # chezmoi-recipes
 
-## Build and test
+## Commands
 
 ```bash
-go build ./...
-go test ./...
-go vet ./...
+make build         # compile to dist/chezmoi-recipes
+make test          # run tests (-race -shuffle=on)
+make test-e2e      # run e2e tests with bats
+make lint          # golangci-lint v2 (go tool)
+make fmt           # format with gofumpt/goimports (go tool)
+make deadcode      # check for unreachable functions
+make audit         # cyclomatic complexity check (gocyclo, informational)
+make govulncheck   # run vulnerability check
+make coverage      # generate HTML coverage report
+make vendor        # tidy and vendor dependencies
+make install       # build and symlink to ~/.local/bin
+make setup-hooks   # configure .githooks/ pre-commit hook
+make clean         # remove build artifacts
+make check-versions # report stale pinned versions in recipe files
 ```
+
+Run a single package: `go test -race -shuffle=on ./internal/<pkg>/...`
 
 ## Testing rules (follow exactly)
 
@@ -97,14 +110,21 @@ Runtime:
 
 ## Releasing
 
-1. Update `CHANGELOG.md` with the new version and date.
-2. Commit: `chore: add CHANGELOG for vX.Y.Z`
-3. Tag and push:
-   ```bash
-   git tag vX.Y.Z
-   git push origin main --tags
-   ```
-4. The `.github/workflows/release.yml` workflow runs goreleaser, which builds linux/amd64+arm64 binaries and publishes a GitHub release with checksums.
+1. Move `CHANGELOG.md` `[Unreleased]` entries to `[X.Y.Z] - YYYY-MM-DD`.
+2. Update `VERSION` file.
+3. Commit: `chore: release vX.Y.Z`
+4. Tag and push: `git tag vX.Y.Z && git push origin main vX.Y.Z`
+
+CI extracts release notes from CHANGELOG.md and runs GoReleaser.
+
+## CHANGELOG
+
+This project uses [Keep a Changelog](https://keepachangelog.com/) format. When adding
+features, fixing bugs, or making breaking changes, add an entry under the `[Unreleased]`
+section of `CHANGELOG.md` before the session ends. Categories: Added, Changed, Deprecated,
+Removed, Fixed, Security.
+
+Before wrapping up a session, check whether CHANGELOG.md needs an update for the work done.
 
 ## CLI commands
 

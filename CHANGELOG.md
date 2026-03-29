@@ -13,7 +13,7 @@
 - Add `zellij` example recipe demonstrating the `.chezmoiexternals/` pattern.
 - Clarify `.chezmoiexternal.toml` fragment merging in roadmap.
 
-## [v0.5.0] - 2026-03-24
+## [0.5.0] - 2026-03-24
 
 ### Features
 
@@ -29,7 +29,7 @@
 - Document `.chezmoiexternals/` pattern for GitHub release binaries.
 - Document hardcoded `home/` and `compiled-home/` directory name convention.
 
-## [v0.4.0] - 2026-03-23
+## [0.4.0] - 2026-03-23
 
 ### Breaking changes
 
@@ -51,7 +51,7 @@
 
 - E2e test (`install_init.bats`): generated `install.sh` clones, overlays, inits with `--promptString`, applies recipe files, and produces a correct `chezmoi.toml`.
 
-## [v0.3.0] - 2026-03-21
+## [0.3.0] - 2026-03-21
 
 ### Features
 
@@ -83,7 +83,7 @@
 - Critical vs optional install scripts: when to use `set -euo pipefail` vs the `_install()` wrapper.
 - Roadmap: scaffold archetypes, `init --with-tests`, custom linters, `chezmoi docker` testing.
 
-## [v0.2.0] - 2026-03-18
+## [0.2.0] - 2026-03-18
 
 ### Breaking changes
 
@@ -115,6 +115,6 @@
 - Documented `chezmoi update` limitation and workaround.
 - Examples trimmed to `git` and `ripgrep`; both verified working.
 
-## [v0.1.0] - 2026-03-16
+## [0.1.0] - 2026-03-16
 
 Initial release.
