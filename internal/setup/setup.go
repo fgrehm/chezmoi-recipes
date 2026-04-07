@@ -15,6 +15,9 @@ import (
 //go:embed ui.bash
 var uiBash []byte
 
+//go:embed check-versions.sh
+var checkVersionsSh []byte
+
 // DeploySharedScripts writes shared script utilities into the chezmoi source
 // directory so that recipe scripts can source them at runtime.
 // It also ensures .chezmoiignore contains "scripts/" so chezmoi does not
@@ -34,6 +37,26 @@ func DeploySharedScripts(sourceDir string) error {
 		return fmt.Errorf("updating .chezmoiignore: %w", err)
 	}
 
+	return nil
+}
+
+// DeployCheckVersions writes the check-versions.sh script into the project
+// root's scripts/ directory so users can run `make check-versions` to find
+// stale pinned versions. The file is only written if it does not already exist.
+func DeployCheckVersions(projectDir string) error {
+	scriptsDir := filepath.Join(projectDir, "scripts")
+	if err := os.MkdirAll(scriptsDir, 0o755); err != nil {
+		return fmt.Errorf("creating scripts directory: %w", err)
+	}
+
+	dest := filepath.Join(scriptsDir, "check-versions.sh")
+	if _, err := os.Lstat(dest); err == nil {
+		return nil
+	}
+
+	if err := os.WriteFile(dest, checkVersionsSh, 0o755); err != nil {
+		return fmt.Errorf("writing check-versions.sh: %w", err)
+	}
 	return nil
 }
 

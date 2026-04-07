@@ -1,4 +1,4 @@
-.PHONY: build test test-e2e lint fmt coverage vendor deadcode govulncheck audit install setup-hooks clean check-versions help
+.PHONY: build test test-e2e lint fmt coverage vendor deadcode govulncheck audit install setup-hooks clean help
 
 MODULE := github.com/fgrehm/chezmoi-recipes/cmd/chezmoi-recipes/cmd
 
@@ -17,7 +17,6 @@ LDFLAGS := -X $(MODULE).version=$(VERSION) \
            -X $(MODULE).commit=$(COMMIT) \
            -X $(MODULE).date=$(DATE)
 
-RECIPES_DIR ?= ./examples
 
 help: ## show this help
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*##/ { printf "  %-15s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -79,6 +78,3 @@ setup-hooks: ## configure .githooks/ pre-commit hook
 
 clean: ## remove build artifacts
 	rm -rf dist/ coverage.out coverage.html
-
-check-versions: ## report stale pinned versions in recipe files
-	@./scripts/check-versions.sh "$(RECIPES_DIR)"
