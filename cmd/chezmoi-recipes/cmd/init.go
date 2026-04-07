@@ -61,6 +61,10 @@ func runInitCmd(ctx context.Context, recDir string, force bool, r io.Reader, w i
 		return fmt.Errorf("configuring Makefile: %w", err)
 	}
 
+	if err := setup.DeployCheckVersions(repoRoot); err != nil {
+		return fmt.Errorf("deploying check-versions script: %w", err)
+	}
+
 	fmt.Fprintln(w, "\nchezmoi-recipes initialized.")
 	fmt.Fprintf(w, "  Repo root:     %s\n", repoRoot)
 	fmt.Fprintf(w, "  Home dir:      %s\n", filepath.Join(repoRoot, "home"))
@@ -69,7 +73,7 @@ func runInitCmd(ctx context.Context, recDir string, force bool, r io.Reader, w i
 		fmt.Fprintln(w, "  Config:        .chezmoi.toml.tmpl already exists, skipped (use --force to overwrite)")
 	}
 	if makefileCreated {
-		fmt.Fprintf(w, "  Makefile:      %s (shell-fmt, shell-fmt-check, shell-lint, check)\n", filepath.Join(repoRoot, "Makefile"))
+		fmt.Fprintf(w, "  Makefile:      %s (shell-fmt, shell-lint, check-versions)\n", filepath.Join(repoRoot, "Makefile"))
 	}
 	if repoURL != "" {
 		fmt.Fprintf(w, "  Install:       %s\n", filepath.Join(repoRoot, "install.sh"))
