@@ -16,7 +16,6 @@ make vendor        # tidy and vendor dependencies
 make install       # build and symlink to ~/.local/bin
 make setup-hooks   # configure .githooks/ pre-commit hook
 make clean         # remove build artifacts
-make check-versions # report stale pinned versions in recipe files
 ```
 
 Run a single package: `go test -race -shuffle=on ./internal/<pkg>/...`
