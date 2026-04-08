@@ -10,7 +10,7 @@
 ### Fixed
 
 - Fix `run_once_` exit code documentation: chezmoi only records scripts as done on exit 0, not regardless of exit code.
-- Fix `"$SUDO"` quoting in script template and scaffold: unquoted `$SUDO` prevents `bash: : command not found` when SUDO is empty (running as root).
+- Fix script template and scaffold to use `run_quiet "$SUDO" ...`: quoted `"$SUDO"` with empty-arg stripping prevents `bash: : command not found` when SUDO is empty (running as root).
 - Fix release notes extraction: strip leading blank lines from CHANGELOG.md so GoReleaser publishes the correct release body.
 - Remove `changelog: disable: true` from `.goreleaser.yaml` which silently ignored `--release-notes`.
 
