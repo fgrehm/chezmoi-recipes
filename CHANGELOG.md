@@ -17,6 +17,7 @@
 ### Docs
 
 - Rewrite "Binary from GitHub releases" section in recipe authoring guide: version pinning is now the primary recommendation with explicit warning against `gitHubLatest*` template functions, new subsections for arch translation schemes (GOARCH vs GNU/uname), version-prefixed archives, and direct binary downloads (`type = "file"`).
+- Add checksum pinning section to "Binary from GitHub releases" in recipe authoring guide.
 - Add `$SUDO` quoting and `run_once_` exit code trade-off to recipe authoring guide.
 - Add vim modeline placement gotcha to common pitfalls.
 - Add `zellij` example recipe demonstrating the `.chezmoiexternals/` pattern.

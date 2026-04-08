@@ -223,6 +223,22 @@ Each file in `.chezmoiexternals/` is always rendered as a template (no `.tmpl` e
 
 Do not use `gitHubLatestReleaseAssetURL` or `gitHubLatestRelease`. These make GitHub API calls at template render time, causing rate-limit failures in CI and unit tests (even with `--exclude=externals`). Pinned `/releases/download/<version>/` URLs avoid the API entirely.
 
+#### Checksum pinning
+
+Add a `checksum.sha256` field to lock the download to a specific hash. This protects against compromised releases: an attacker who gains control of a GitHub release can replace both the asset and the project's `checksums.txt` atomically, but cannot change a value committed in your dotfiles repo.
+
+```toml
+[".local/bin/diffnav"]
+  type = "archive-file"
+  url = "https://github.com/dlvhdr/diffnav/releases/download/v{{ $version }}/diffnav_Linux_{{ $arch }}.tar.gz"
+  executable = true
+  path = "diffnav"
+  [".local/bin/diffnav".checksum]
+    sha256 = "a1b2c3..."
+```
+
+Prefer hardcoded `sha256` over `sha256url` pointing at the project's `checksums.txt`. To get the hash, download the asset and run `sha256sum`. When bumping versions, update both `$version` and the checksum together.
+
 #### Arch translation
 
 Two naming schemes appear in the wild:
