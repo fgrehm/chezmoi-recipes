@@ -88,7 +88,7 @@ _install() {
   # VERSION="1.0.0"
   # curl -fsSL "https://github.com/org/<name>/releases/download/v${VERSION}/<name>_linux_amd64.tar.gz" \
   #   | tar -xz -C /tmp "<name>"
-  # "$SUDO" install -m 755 "/tmp/<name>" /usr/local/bin/<name>
+  # run_quiet "$SUDO" install -m 755 "/tmp/<name>" /usr/local/bin/<name>
 
   echo "TODO: add install commands for <name>"
 }

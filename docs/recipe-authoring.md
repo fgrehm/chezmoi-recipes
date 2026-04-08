@@ -69,7 +69,7 @@ SUDO=""
 _install() {
   set -e
   log_info "Installing <tool>..."
-  "$SUDO" apt-get install -y <package>
+  run_quiet "$SUDO" apt-get install -y <package>
 }
 
 if ! _install; then
@@ -84,7 +84,7 @@ What this encodes:
 - `#!/bin/env bash`: portable shebang that works regardless of bash location
 - `source "$CHEZMOI_SOURCE_DIR/scripts/ui.bash"`: logging functions (`log_info`, `log_skip`, `log_error`, `run_quiet`), deployed by `chezmoi-recipes init`
 - `command -v` guard: check before installing, making scripts safe to re-run
-- `$SUDO` variable via template: keeps every line parseable by shfmt (instead of inline `{{ if }}sudo{{ end }}`)
+- `$SUDO` variable via template: keeps every line parseable by shfmt (instead of inline `{{ if }}sudo{{ end }}`). Use `run_quiet "$SUDO" ...` to safely handle the empty case (see "$SUDO with run_quiet" in Common Pitfalls)
 - `_install()` wrapper: see "Resilient install scripts" below
 
 ### Resilient install scripts
@@ -111,9 +111,13 @@ fi
 If `_install` fails, the outer script exits 0 and chezmoi continues applying the
 remaining recipes. The error is visible in the output but doesn't block anything.
 
-Note: `run_once_` scripts are tracked by content hash regardless of exit code. Once
-run (even on failure), chezmoi won't auto-retry. The user re-runs `chezmoi apply`
-after fixing the underlying issue (usually a network or auth problem).
+**Trade-off:** chezmoi only records a `run_once_` script as "done" on exit 0. A script
+that exits non-zero is retried on the next `chezmoi apply`. The `_install()` wrapper
+always exits 0, so chezmoi marks it done even on failure. The user must run
+`chezmoi state delete-bucket --bucket=scriptState` to force a retry. Use the wrapper
+for optional tools where a transient failure should not block other recipes. For
+critical dependencies, use `set -eo pipefail` at the top level instead (see
+"Critical vs optional install scripts" below).
 
 ### Script execution order
 
@@ -187,8 +191,8 @@ SUDO=""
 _install() {
   set -e
   log_info "Installing: ${MISSING[*]}"
-  "$SUDO" apt-get update -qq
-  "$SUDO" apt-get install -y "${MISSING[@]}"
+  run_quiet "$SUDO" apt-get update -qq
+  run_quiet "$SUDO" apt-get install -y "${MISSING[@]}"
 }
 
 if ! _install; then
@@ -218,6 +222,22 @@ Each file in `.chezmoiexternals/` is always rendered as a template (no `.tmpl` e
 ```
 
 Do not use `gitHubLatestReleaseAssetURL` or `gitHubLatestRelease`. These make GitHub API calls at template render time, causing rate-limit failures in CI and unit tests (even with `--exclude=externals`). Pinned `/releases/download/<version>/` URLs avoid the API entirely.
+
+#### Checksum pinning
+
+Add a `checksum.sha256` field to lock the download to a specific hash. This protects against compromised releases: an attacker who gains control of a GitHub release can replace both the asset and the project's `checksums.txt` atomically, but cannot change a value committed in your dotfiles repo.
+
+```toml
+[".local/bin/diffnav"]
+  type = "archive-file"
+  url = "https://github.com/dlvhdr/diffnav/releases/download/v{{ $version }}/diffnav_Linux_{{ $arch }}.tar.gz"
+  executable = true
+  path = "diffnav"
+  [".local/bin/diffnav".checksum]
+    sha256 = "a1b2c3..."
+```
+
+Prefer hardcoded `sha256` over `sha256url` pointing at the project's `checksums.txt`. To get the hash, download the asset and run `sha256sum`. When bumping versions, update both `$version` and the checksum together.
 
 #### Arch translation
 
@@ -480,6 +500,23 @@ chezmoi: .config: inconsistent state (...dot_config, ...private_dot_config)
 ```
 
 Always use `private_dot_config` for files under `.config`. The `.config` directory holds user application state and is private by design. This applies to every recipe, every time -- there is no environment where mixing is acceptable.
+
+### `"$SUDO"` fails when empty
+
+When `SUDO` is empty (running as root), `"$SUDO" apt-get install ...` becomes `"" apt-get install ...`. Bash tries to execute an empty string as a command and fails with `bash: : command not found`.
+
+Use `run_quiet` (from `ui.bash`) which strips empty arguments automatically:
+
+```bash
+run_quiet "$SUDO" apt-get install -y <package>
+```
+
+This keeps the variable properly quoted (no ShellCheck SC2086 warning) while safely handling the empty case. For commands where you need visible output (not captured by `run_quiet`), use unquoted `$SUDO` with a ShellCheck directive:
+
+```bash
+# shellcheck disable=SC2086
+$SUDO systemctl daemon-reload
+```
 
 ### `chezmoi cd` goes to the repo root, not `recipes/`
 

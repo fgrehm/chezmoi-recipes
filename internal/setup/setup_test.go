@@ -67,6 +67,63 @@ func TestDeploySharedScripts_Idempotent(t *testing.T) {
 	}
 }
 
+func TestDeployCheckVersions(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	projectDir := t.TempDir()
+
+	if err := DeployCheckVersions(projectDir); err != nil {
+		t.Fatalf("DeployCheckVersions() error = %v", err)
+	}
+
+	dest := filepath.Join(projectDir, "scripts", "check-versions.sh")
+	fi, err := os.Stat(dest)
+	if err != nil {
+		t.Fatalf("check-versions.sh not found: %v", err)
+	}
+	if fi.Mode().Perm()&0o111 == 0 {
+		t.Error("check-versions.sh is not executable")
+	}
+
+	data, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatalf("reading check-versions.sh: %v", err)
+	}
+	if !strings.Contains(string(data), "fetch_latest") {
+		t.Error("check-versions.sh missing fetch_latest function")
+	}
+}
+
+func TestDeployCheckVersions_SkipsIfExists(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	projectDir := t.TempDir()
+	scriptsDir := filepath.Join(projectDir, "scripts")
+	if err := os.MkdirAll(scriptsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	existing := "#!/bin/bash\n# custom check-versions\n"
+	if err := os.WriteFile(filepath.Join(scriptsDir, "check-versions.sh"), []byte(existing), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := DeployCheckVersions(projectDir); err != nil {
+		t.Fatalf("DeployCheckVersions() error = %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(scriptsDir, "check-versions.sh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != existing {
+		t.Error("existing check-versions.sh was overwritten")
+	}
+}
+
 func TestEnsureChezmoiIgnore_AppendsToExisting(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())

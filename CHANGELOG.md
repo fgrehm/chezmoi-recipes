@@ -4,14 +4,19 @@
 
 ### Features
 
-- `make check-versions` reports stale pinned versions in `.chezmoiexternals/*.toml` files and shell scripts with `VERSION="x.y.z"` against the GitHub releases API. Also flags unpinned `/latest/download/` URLs. Auth: `gh` CLI, `GITHUB_TOKEN`, or unauthenticated curl. Exits non-zero when updates are available (CI-friendly).
+- `scripts/check-versions.sh` reports stale pinned versions in `.chezmoiexternals/*.toml` files and shell scripts with `VERSION="x.y.z"` against the GitHub releases API. Also flags unpinned `/latest/download/` URLs. Auth: `gh` CLI, `GITHUB_TOKEN`, or unauthenticated curl. Exits non-zero when updates are available (CI-friendly).
+- `init` now deploys `scripts/check-versions.sh` and adds a `check-versions` target to the generated Makefile in dotfiles repos.
+
+### Fixed
+
+- Fix `run_once_` exit code documentation: chezmoi only records scripts as done on exit 0, not regardless of exit code.
+- Fix script template and scaffold to use `run_quiet "$SUDO" ...`: quoted `"$SUDO"` with empty-arg stripping prevents `bash: : command not found` when SUDO is empty (running as root).
+- Fix release notes extraction: strip leading blank lines from CHANGELOG.md so GoReleaser publishes the correct release body.
+- Remove `changelog: disable: true` from `.goreleaser.yaml` which silently ignored `--release-notes`.
 
 ### Docs
 
-- Rewrite "Binary from GitHub releases" section in recipe authoring guide: version pinning is now the primary recommendation with explicit warning against `gitHubLatest*` template functions, new subsections for arch translation schemes (GOARCH vs GNU/uname), version-prefixed archives, and direct binary downloads (`type = "file"`).
-- Add vim modeline placement gotcha to common pitfalls.
-- Add `zellij` example recipe demonstrating the `.chezmoiexternals/` pattern.
-- Clarify `.chezmoiexternal.toml` fragment merging in roadmap.
+- Recipe authoring guide: rewrite GitHub releases section (version pinning, arch translation, checksum pinning, direct binary downloads), add script best practices (`$SUDO` quoting, `run_once_` exit code behavior, critical vs optional scripts), new common pitfalls.
 
 ## [0.5.0] - 2026-03-24
 

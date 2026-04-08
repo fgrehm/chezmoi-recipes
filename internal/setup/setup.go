@@ -6,6 +6,7 @@ package setup
 import (
 	"bufio"
 	_ "embed"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +15,9 @@ import (
 
 //go:embed ui.bash
 var uiBash []byte
+
+//go:embed check-versions.sh
+var checkVersionsSh []byte
 
 // DeploySharedScripts writes shared script utilities into the chezmoi source
 // directory so that recipe scripts can source them at runtime.
@@ -34,6 +38,33 @@ func DeploySharedScripts(sourceDir string) error {
 		return fmt.Errorf("updating .chezmoiignore: %w", err)
 	}
 
+	return nil
+}
+
+// DeployCheckVersions writes the check-versions.sh script into the project
+// root's scripts/ directory so users can run `make check-versions` to find
+// stale pinned versions. The file is only written if it does not already exist.
+func DeployCheckVersions(projectDir string) error {
+	scriptsDir := filepath.Join(projectDir, "scripts")
+	if err := os.MkdirAll(scriptsDir, 0o755); err != nil {
+		return fmt.Errorf("creating scripts directory: %w", err)
+	}
+
+	dest := filepath.Join(scriptsDir, "check-versions.sh")
+	fi, err := os.Lstat(dest)
+	if err == nil {
+		if !fi.Mode().IsRegular() {
+			return fmt.Errorf("%s exists but is not a regular file", dest)
+		}
+		return nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("checking check-versions.sh: %w", err)
+	}
+
+	if err := os.WriteFile(dest, checkVersionsSh, 0o755); err != nil {
+		return fmt.Errorf("writing check-versions.sh: %w", err)
+	}
 	return nil
 }
 

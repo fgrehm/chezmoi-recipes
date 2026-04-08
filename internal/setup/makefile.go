@@ -13,11 +13,12 @@ import (
 // recipes directory. Recipe lines use real tab characters as required by make.
 // %% and \n in the awk command are intentional: %% becomes % after fmt.Sprintf,
 // and \n is literal backslash-n that awk interprets as a newline in printf.
-const makefileTemplate = `SHELL_FILES := $(shell find %s \( -name "*.sh" -o -name "*.sh.tmpl" -o -name "*.bash" \) 2>/dev/null | sort)
+const makefileTemplate = `RECIPES_DIR := %s
+SHELL_FILES := $(shell find $(RECIPES_DIR) \( -name "*.sh" -o -name "*.sh.tmpl" -o -name "*.bash" \) 2>/dev/null | sort)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help shell-fmt shell-fmt-check shell-lint check
+.PHONY: help shell-fmt shell-fmt-check shell-lint check check-versions
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  make %%-18s %%s\n", $$1, $$2}'
@@ -32,6 +33,9 @@ shell-lint: ## Lint shell scripts (shellcheck)
 	shellcheck $(SHELL_FILES)
 
 check: shell-fmt-check shell-lint ## Run shell formatting check and shellcheck
+
+check-versions: ## Report stale pinned versions in recipe files
+	@./scripts/check-versions.sh "$(RECIPES_DIR)"
 `
 
 // EnsureMakefile creates a Makefile with shell lint and format targets in

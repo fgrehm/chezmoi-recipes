@@ -8,6 +8,10 @@ import (
 )
 
 func TestEnsureMakefile_CreatesFile(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
 	projectDir := t.TempDir()
 	absRecipesDir := filepath.Join(projectDir, "recipes")
 
@@ -25,13 +29,18 @@ func TestEnsureMakefile_CreatesFile(t *testing.T) {
 	}
 	content := string(data)
 
-	// SHELL_FILES uses relative path to recipes dir.
-	if !strings.Contains(content, "find recipes") {
-		t.Errorf("expected 'find recipes' in SHELL_FILES, got:\n%s", content)
+	// RECIPES_DIR variable is set.
+	if !strings.Contains(content, "RECIPES_DIR := recipes") {
+		t.Errorf("expected 'RECIPES_DIR := recipes' in Makefile, got:\n%s", content)
+	}
+
+	// SHELL_FILES uses RECIPES_DIR variable.
+	if !strings.Contains(content, "find $(RECIPES_DIR)") {
+		t.Errorf("expected 'find $(RECIPES_DIR)' in SHELL_FILES, got:\n%s", content)
 	}
 
 	// All required targets are present.
-	for _, target := range []string{"shell-fmt", "shell-fmt-check", "shell-lint", "check", "help"} {
+	for _, target := range []string{"shell-fmt", "shell-fmt-check", "shell-lint", "check", "check-versions", "help"} {
 		if !strings.Contains(content, target+":") {
 			t.Errorf("expected target %q in Makefile", target)
 		}
@@ -46,6 +55,10 @@ func TestEnsureMakefile_CreatesFile(t *testing.T) {
 }
 
 func TestEnsureMakefile_SkipsIfExists(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
 	projectDir := t.TempDir()
 	makefilePath := filepath.Join(projectDir, "Makefile")
 	existing := "# existing Makefile content\n"
@@ -72,6 +85,10 @@ func TestEnsureMakefile_SkipsIfExists(t *testing.T) {
 }
 
 func TestEnsureMakefile_RelativePath(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
 	projectDir := t.TempDir()
 	absRecipesDir := filepath.Join(projectDir, "my-recipes")
 
@@ -80,7 +97,7 @@ func TestEnsureMakefile_RelativePath(t *testing.T) {
 	}
 
 	data, _ := os.ReadFile(filepath.Join(projectDir, "Makefile"))
-	if !strings.Contains(string(data), "find my-recipes") {
-		t.Errorf("expected 'find my-recipes' for non-default recipes dir, got:\n%s", data)
+	if !strings.Contains(string(data), "RECIPES_DIR := my-recipes") {
+		t.Errorf("expected 'RECIPES_DIR := my-recipes' for non-default recipes dir, got:\n%s", data)
 	}
 }
