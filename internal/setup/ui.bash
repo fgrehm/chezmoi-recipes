@@ -14,8 +14,8 @@ log_error() { printf '[%s] ==> ERROR: %s\n' "$(_ts)" "$*" >&2; }
 
 # Run a command with stdout/stderr captured.
 # On success: silent. On failure: dump captured output, then return the exit code.
-# Empty arguments are stripped so callers can write: run_quiet $SUDO cmd args...
-# When SUDO is empty, the unquoted expansion disappears harmlessly.
+# Empty arguments are stripped so callers can write: run_quiet "$SUDO" cmd args...
+# When SUDO is empty, the empty string is dropped rather than executed.
 run_quiet() {
   : >"$_UI_LOGFILE"
   local cmd=()

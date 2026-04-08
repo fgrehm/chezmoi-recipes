@@ -6,6 +6,7 @@ package setup
 import (
 	"bufio"
 	_ "embed"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -50,8 +51,15 @@ func DeployCheckVersions(projectDir string) error {
 	}
 
 	dest := filepath.Join(scriptsDir, "check-versions.sh")
-	if _, err := os.Lstat(dest); err == nil {
+	fi, err := os.Lstat(dest)
+	if err == nil {
+		if !fi.Mode().IsRegular() {
+			return fmt.Errorf("%s exists but is not a regular file", dest)
+		}
 		return nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("checking check-versions.sh: %w", err)
 	}
 
 	if err := os.WriteFile(dest, checkVersionsSh, 0o755); err != nil {

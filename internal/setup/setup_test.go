@@ -70,6 +70,7 @@ func TestDeploySharedScripts_Idempotent(t *testing.T) {
 func TestDeployCheckVersions(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	projectDir := t.TempDir()
 
@@ -98,6 +99,7 @@ func TestDeployCheckVersions(t *testing.T) {
 func TestDeployCheckVersions_SkipsIfExists(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	projectDir := t.TempDir()
 	scriptsDir := filepath.Join(projectDir, "scripts")

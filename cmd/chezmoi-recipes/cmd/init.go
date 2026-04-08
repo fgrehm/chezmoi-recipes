@@ -73,7 +73,7 @@ func runInitCmd(ctx context.Context, recDir string, force bool, r io.Reader, w i
 		fmt.Fprintln(w, "  Config:        .chezmoi.toml.tmpl already exists, skipped (use --force to overwrite)")
 	}
 	if makefileCreated {
-		fmt.Fprintf(w, "  Makefile:      %s (shell-fmt, shell-lint, check-versions)\n", filepath.Join(repoRoot, "Makefile"))
+		fmt.Fprintf(w, "  Makefile:      %s (shell-fmt, shell-fmt-check, shell-lint, check, check-versions)\n", filepath.Join(repoRoot, "Makefile"))
 	}
 	if repoURL != "" {
 		fmt.Fprintf(w, "  Install:       %s\n", filepath.Join(repoRoot, "install.sh"))

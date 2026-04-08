@@ -4,7 +4,7 @@
 
 ### Features
 
-- `make check-versions` reports stale pinned versions in `.chezmoiexternals/*.toml` files and shell scripts with `VERSION="x.y.z"` against the GitHub releases API. Also flags unpinned `/latest/download/` URLs. Auth: `gh` CLI, `GITHUB_TOKEN`, or unauthenticated curl. Exits non-zero when updates are available (CI-friendly).
+- `scripts/check-versions.sh` reports stale pinned versions in `.chezmoiexternals/*.toml` files and shell scripts with `VERSION="x.y.z"` against the GitHub releases API. Also flags unpinned `/latest/download/` URLs. Auth: `gh` CLI, `GITHUB_TOKEN`, or unauthenticated curl. Exits non-zero when updates are available (CI-friendly).
 - `init` now deploys `scripts/check-versions.sh` and adds a `check-versions` target to the generated Makefile in dotfiles repos.
 
 ### Fixed

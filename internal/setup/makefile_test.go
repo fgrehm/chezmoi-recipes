@@ -8,6 +8,10 @@ import (
 )
 
 func TestEnsureMakefile_CreatesFile(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
 	projectDir := t.TempDir()
 	absRecipesDir := filepath.Join(projectDir, "recipes")
 
@@ -51,6 +55,10 @@ func TestEnsureMakefile_CreatesFile(t *testing.T) {
 }
 
 func TestEnsureMakefile_SkipsIfExists(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
 	projectDir := t.TempDir()
 	makefilePath := filepath.Join(projectDir, "Makefile")
 	existing := "# existing Makefile content\n"
@@ -77,6 +85,10 @@ func TestEnsureMakefile_SkipsIfExists(t *testing.T) {
 }
 
 func TestEnsureMakefile_RelativePath(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
 	projectDir := t.TempDir()
 	absRecipesDir := filepath.Join(projectDir, "my-recipes")
 

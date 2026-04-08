@@ -69,7 +69,7 @@ SUDO=""
 _install() {
   set -e
   log_info "Installing <tool>..."
-  $SUDO apt-get install -y <package>
+  run_quiet "$SUDO" apt-get install -y <package>
 }
 
 if ! _install; then
@@ -84,7 +84,7 @@ What this encodes:
 - `#!/bin/env bash`: portable shebang that works regardless of bash location
 - `source "$CHEZMOI_SOURCE_DIR/scripts/ui.bash"`: logging functions (`log_info`, `log_skip`, `log_error`, `run_quiet`), deployed by `chezmoi-recipes init`
 - `command -v` guard: check before installing, making scripts safe to re-run
-- `$SUDO` variable via template: keeps every line parseable by shfmt (instead of inline `{{ if }}sudo{{ end }}`). Always use `$SUDO` unquoted (see "$SUDO must be unquoted" in Common Pitfalls)
+- `$SUDO` variable via template: keeps every line parseable by shfmt (instead of inline `{{ if }}sudo{{ end }}`). Use `run_quiet "$SUDO" ...` to safely handle the empty case (see "$SUDO with run_quiet" in Common Pitfalls)
 - `_install()` wrapper: see "Resilient install scripts" below
 
 ### Resilient install scripts
@@ -191,8 +191,8 @@ SUDO=""
 _install() {
   set -e
   log_info "Installing: ${MISSING[*]}"
-  $SUDO apt-get update -qq
-  $SUDO apt-get install -y "${MISSING[@]}"
+  run_quiet "$SUDO" apt-get update -qq
+  run_quiet "$SUDO" apt-get install -y "${MISSING[@]}"
 }
 
 if ! _install; then
@@ -501,17 +501,22 @@ chezmoi: .config: inconsistent state (...dot_config, ...private_dot_config)
 
 Always use `private_dot_config` for files under `.config`. The `.config` directory holds user application state and is private by design. This applies to every recipe, every time -- there is no environment where mixing is acceptable.
 
-### `$SUDO` must be unquoted
+### `"$SUDO"` fails when empty
 
 When `SUDO` is empty (running as root), `"$SUDO" apt-get install ...` becomes `"" apt-get install ...`. Bash tries to execute an empty string as a command and fails with `bash: : command not found`.
 
-Use `$SUDO` unquoted:
+Use `run_quiet` (from `ui.bash`) which strips empty arguments automatically:
 
 ```bash
-$SUDO apt-get install -y <package>
+run_quiet "$SUDO" apt-get install -y <package>
 ```
 
-This is safe because `SUDO` is either `"sudo"` (single word, no splitting) or `""` (expands to nothing when unquoted). The template conditional guarantees no other values.
+This keeps the variable properly quoted (no ShellCheck SC2086 warning) while safely handling the empty case. For commands where you need visible output (not captured by `run_quiet`), use unquoted `$SUDO` with a ShellCheck directive:
+
+```bash
+# shellcheck disable=SC2086
+$SUDO systemctl daemon-reload
+```
 
 ### `chezmoi cd` goes to the repo root, not `recipes/`
 
