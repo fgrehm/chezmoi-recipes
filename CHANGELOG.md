@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-04-08
+
 ### Features
 
 - `scripts/check-versions.sh` reports stale pinned versions in `.chezmoiexternals/*.toml` files and shell scripts with `VERSION="x.y.z"` against the GitHub releases API. Also flags unpinned `/latest/download/` URLs. Auth: `gh` CLI, `GITHUB_TOKEN`, or unauthenticated curl. Exits non-zero when updates are available (CI-friendly).
