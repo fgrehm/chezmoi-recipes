@@ -12,14 +12,20 @@ Embed a comment in each file written to `compiled-home/` during overlay, recordi
 
 This enables smarter guard hooks (see below) and helps with debugging.
 
-## Smart guard hooks
+## Recipe-aware add/edit commands
 
-With provenance comments, guard hooks could redirect instead of blocking:
+Make chezmoi's source-mutating commands work with the generated source tree by routing them through chezmoi-recipes instead of unconditionally blocking them. This should be implemented incrementally:
 
-- `chezmoi edit ~/.gitconfig` reads provenance from `compiled-home/dot_gitconfig`, prints "this file comes from recipes/git/chezmoi/dot_gitconfig, opening that instead", and opens the actual source file.
-- `chezmoi add ~/.bashrc` (no provenance, new file) copies to `home/dot_bashrc` and re-runs overlay.
+1. Build an ownership/provenance index during overlay. It must map each compiled chezmoi source path to either `home/` or its owning recipe.
+2. Add `chezmoi-recipes edit TARGET`, resolving an owned target to the actual file in `home/` or `recipes/<name>/chezmoi/`.
+3. Add `chezmoi-recipes add TARGET`, placing new files in `home/` by default and accepting an explicit `--recipe NAME` when the user wants recipe ownership.
+4. Add safe `re-add` routing for files whose ownership and source attributes can be resolved unambiguously.
+5. Change the generated guard hooks to delegate to these commands.
+6. Keep ambiguous or destructive operations (`merge`, `import`, `forget`, and `destroy`) guarded until their ownership and removal semantics are defined.
 
-Binary files and files without comment syntax would need a sidecar manifest (`compiled-home/.provenance.json`).
+The routing layer must preserve chezmoi's handling of source attributes, templates, and encrypted files rather than reimplementing those mechanisms.
+
+Binary files and files without comment syntax require a sidecar manifest such as `compiled-home/.provenance.json`; provenance comments alone are insufficient.
 
 ## Incremental overlay mode
 
